@@ -18,7 +18,8 @@ import androidx.compose.ui.graphics.Color
 
 @Composable
 fun HomeScreen(
-    onSOS: () -> Unit = {},
+    onNavigateToSOS: () -> Unit = {},
+    onNavigateToContacts: () -> Unit = {},
     onShareLocation: () -> Unit = {},
     onCallPolice: () -> Unit = {},
     onProfile: () -> Unit = {}
@@ -62,7 +63,7 @@ fun HomeScreen(
                 .size(220.dp)
                 .clip(CircleShape)
                 .background(Color(0xFFFF3B30))
-                .clickable { onSOS() },
+                .clickable { onNavigateToSOS() },
             contentAlignment = Alignment.Center
         ) {
             Text(
@@ -100,6 +101,49 @@ fun HomeScreen(
                 onClick = onCallPolice
             )
         }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Emergency Contacts Button
+        OutlinedButton(
+            onClick = onNavigateToContacts,
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = Color(0xFFFF3B30)
+            )
+        ) {
+            Text(
+                "Manage Emergency Contacts",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        Spacer(modifier = Modifier.height(30.dp))
+
+        // Feature Cards
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = Color.White
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    "Safety Features",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF333333)
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                FeatureItem("📱", "Emergency Contacts", "Manage trusted contacts")
+                FeatureItem("🚨", "SOS Alert", "One-tap emergency notification")
+                FeatureItem("📍", "Live Location", "Real-time location sharing")
+                FeatureItem("🔔", "Smart Alerts", "AI-powered danger detection")
+            }
+        }
     }
 }
 
@@ -121,5 +165,34 @@ fun QuickActionCard(title: String, color: Color, onClick: () -> Unit) {
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center
         )
+    }
+}
+
+@Composable
+fun FeatureItem(icon: String, title: String, description: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = icon,
+            fontSize = 24.sp,
+            modifier = Modifier.padding(end = 12.dp)
+        )
+        Column {
+            Text(
+                text = title,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF333333)
+            )
+            Text(
+                text = description,
+                fontSize = 14.sp,
+                color = Color(0xFF666666)
+            )
+        }
     }
 }

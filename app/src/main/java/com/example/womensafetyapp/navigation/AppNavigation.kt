@@ -6,6 +6,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.womensafetyapp.ui.auth.*
 import com.example.womensafetyapp.ui.home.HomeScreen
+import com.example.womensafetyapp.ui.emergency.EmergencyContactsScreen
+import com.example.womensafetyapp.ui.emergency.SOSEmergencyScreen
 
 sealed class Screen(val route: String) {
     object Login : Screen("login")
@@ -16,6 +18,8 @@ sealed class Screen(val route: String) {
     }
     object ResetPassword : Screen("reset_pass")
     object Home : Screen("home")
+    object EmergencyContacts : Screen("emergency_contacts")
+    object SOSEmergency : Screen("sos_emergency")
 }
 
 @Composable
@@ -48,7 +52,27 @@ fun AppNavigation(navController: NavHostController) {
         }
 
         composable(Screen.Home.route) {
-            HomeScreen()
+            HomeScreen(
+                onNavigateToSOS = {
+                    navController.navigate(Screen.SOSEmergency.route)
+                },
+                onNavigateToContacts = {
+                    navController.navigate(Screen.EmergencyContacts.route)
+                }
+            )
+        }
+
+        // New Emergency Features
+        composable(Screen.SOSEmergency.route) {
+            SOSEmergencyScreen(
+                onNavigateToContacts = {
+                    navController.navigate(Screen.EmergencyContacts.route)
+                }
+            )
+        }
+
+        composable(Screen.EmergencyContacts.route) {
+            EmergencyContactsScreen()
         }
     }
 }
