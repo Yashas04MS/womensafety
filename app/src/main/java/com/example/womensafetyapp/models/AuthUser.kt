@@ -1,11 +1,8 @@
-package com.example.womensafetyapp.models   // your package name
+package com.example.womensafetyapp.network.models
 
 data class AuthUser(
-    val id: String? = null,
-    val username: String,
-    val email: String,
-    val password: String,
-    val role: String? = null,
-    val createdAt: String? = null,
-    val updatedAt: String? = null
+    val id: Int?,
+    val firstName: String?,
+    val lastName: String?,
+    val email: String?
 )

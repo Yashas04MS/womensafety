@@ -14,7 +14,7 @@ interface ApiService {
     // REGISTER
     @POST("api/auth/register")
     suspend fun register(
-        @Body request: AuthenticationRequestBody
+        @Body request: RegisterRequest
     ): AuthenticationResponseBody
 
     // SEND EMAIL VERIFICATION TOKEN
@@ -52,4 +52,5 @@ interface ApiService {
         @Query("lastName") lastName: String?,
         @Query("phoneNumber") phoneNumber: String?
     ): Map<String, Any>
+
 }

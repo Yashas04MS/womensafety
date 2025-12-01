@@ -26,7 +26,11 @@ fun AppNavigation(navController: NavHostController) {
         composable(Screen.Login.route) { LoginScreen(navController) }
         composable(Screen.Register.route) { RegisterScreen(navController) }
         composable(Screen.Forgot.route) { ForgotPasswordScreen(navController) }
-        composable(Screen.VerifyOTP.route) { VerifyOTPScreen(navController) }
+//        composable(Screen.VerifyOTP.route) { VerifyOTPScreen(navController) }
+        composable("verify_otp/{email}") { backStackEntry ->
+            val email = backStackEntry.arguments?.getString("email") ?: ""
+            VerifyOtpScreen(navController, email)
+        }
         composable(Screen.ResetPassword.route) { ResetPasswordScreen(navController) }
         composable(Screen.Home.route) {
             HomeScreen()

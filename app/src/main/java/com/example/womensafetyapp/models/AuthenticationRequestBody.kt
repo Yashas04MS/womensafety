@@ -1,4 +1,4 @@
-package com.example.womensafetyapp.models
+package com.example.womensafetyapp.network.models
 
 data class AuthenticationRequestBody(
     val email: String,
