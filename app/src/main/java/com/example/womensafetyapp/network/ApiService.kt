@@ -62,10 +62,16 @@ interface ApiService {
         @Header("Authorization") token: String
     ): List<EmergencyContact>
 
+//    @POST("api/emergency/contacts")
+//    suspend fun addEmergencyContact(
+//        @Header("Authorization") token: String,
+//        contact: EmergencyContactDTO
+//    ): Map<String, Any>
+
     @POST("api/emergency/contacts")
     suspend fun addEmergencyContact(
-        @Header("Authorization") token: String,
-        contact: EmergencyContactDTO
+        @Body contact: EmergencyContactDTO,
+        @Header("Authorization") token: String
     ): Map<String, Any>
 
     @PUT("api/emergency/contacts/{contactId}")

@@ -1,5 +1,7 @@
 package com.example.womensafetyapp.ui.home
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -15,15 +17,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun HomeScreen(
     onNavigateToSOS: () -> Unit = {},
-    onNavigateToContacts: () -> Unit = {},
-    onShareLocation: () -> Unit = {},
-    onCallPolice: () -> Unit = {},
-    onProfile: () -> Unit = {}
+    onNavigateToContacts: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -48,7 +50,7 @@ fun HomeScreen(
                     .size(42.dp)
                     .clip(CircleShape)
                     .background(Color(0xFFFB7185))
-                    .clickable { onProfile() },
+                    .clickable { /* Navigate to profile */ },
                 contentAlignment = Alignment.Center
             ) {
                 Text("U", color = Color.White, fontWeight = FontWeight.Bold)
@@ -93,12 +95,25 @@ fun HomeScreen(
             QuickActionCard(
                 title = "Share\nLocation",
                 color = Color(0xFF2563EB),
-                onClick = onShareLocation
+                onClick = {
+                    // Share current location via SMS
+                    val intent = Intent(Intent.ACTION_SENDTO).apply {
+                        data = Uri.parse("smsto:")
+                        putExtra("sms_body", "I'm sharing my location with you for safety.")
+                    }
+                    context.startActivity(intent)
+                }
             )
             QuickActionCard(
                 title = "Call\nPolice",
                 color = Color(0xFF16A34A),
-                onClick = onCallPolice
+                onClick = {
+                    // Call emergency number (100 for India, 911 for US)
+                    val intent = Intent(Intent.ACTION_DIAL).apply {
+                        data = Uri.parse("tel:100")
+                    }
+                    context.startActivity(intent)
+                }
             )
         }
 

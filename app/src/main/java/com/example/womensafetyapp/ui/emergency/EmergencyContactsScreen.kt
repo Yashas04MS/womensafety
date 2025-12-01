@@ -12,20 +12,196 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.womensafetyapp.network.apiClient
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
+import android.content.Context
 
+// ===========================================================
+// DATA MODELS
+// ===========================================================
+
+data class EmergencyContact(
+    val id: Long,
+    val contactName: String,
+    val phoneNumber: String,
+    val relationship: String?
+)
+
+data class EmergencyContactDTO(
+    val contactName: String,
+    val phoneNumber: String,
+    val relationship: String?
+)
+
+// ===========================================================
+// VIEWMODEL
+// ===========================================================
+
+class EmergencyContactsViewModel(
+    private val appContext: Context
+) : ViewModel() {
+
+    private val _contacts = MutableStateFlow<List<EmergencyContact>>(emptyList())
+    val contacts: StateFlow<List<EmergencyContact>> = _contacts
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading
+
+    private val _errorMessage = MutableStateFlow("")
+    val errorMessage: StateFlow<String> = _errorMessage
+
+    private val _successMessage = MutableStateFlow("")
+    val successMessage: StateFlow<String> = _successMessage
+
+    private fun getToken(): String {
+        val token = appContext.getSharedPreferences("user_token", Context.MODE_PRIVATE)
+            .getString("jwt", "") ?: ""
+        return "Bearer $token"
+    }
+
+    fun fetchContacts() {
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                _errorMessage.value = ""
+
+                val response = apiClient.api.getEmergencyContacts(getToken())
+                _contacts.value = response.map {
+                    EmergencyContact(
+                        id = it.id,
+                        contactName = it.contactName,
+                        phoneNumber = it.phoneNumber,
+                        relationship = it.relationship
+                    )
+                }
+
+            } catch (e: Exception) {
+                _errorMessage.value = e.localizedMessage ?: "Failed to fetch contacts"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun addContact(
+        name: String,
+        phone: String,
+        relationship: String
+    ) {
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                _errorMessage.value = ""
+
+                val contactData = EmergencyContactDTO(
+                    contactName = name.trim(),
+                    phoneNumber = phone.trim(),
+                    relationship = relationship.trim().ifEmpty { null }
+                )
+
+                apiClient.api.addEmergencyContact(
+                    contact = contactData,
+                    token = getToken()
+                )
+
+                _successMessage.value = "Contact added successfully!"
+                fetchContacts()
+
+            } catch (e: Exception) {
+                _errorMessage.value = e.localizedMessage ?: "Failed to add contact"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun updateContact(
+        contactId: Long,
+        name: String,
+        phone: String,
+        relationship: String
+    ) {
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                _errorMessage.value = ""
+
+                val contactData = EmergencyContactDTO(
+                    contactName = name.trim(),
+                    phoneNumber = phone.trim(),
+                    relationship = relationship.trim().ifEmpty { null }
+                )
+
+                apiClient.api.updateEmergencyContact(
+                    contactId = contactId,
+                    contact = contactData,
+                    token = getToken()
+                )
+
+                _successMessage.value = "Contact updated successfully!"
+                fetchContacts()
+
+            } catch (e: Exception) {
+                _errorMessage.value = e.localizedMessage ?: "Failed to update contact"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun deleteContact(contactId: Long) {
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                _errorMessage.value = ""
+
+                apiClient.api.deleteEmergencyContact(
+                    contactId = contactId,
+                    token = getToken()
+                )
+
+                _successMessage.value = "Contact deleted successfully!"
+                fetchContacts()
+
+            } catch (e: Exception) {
+                _errorMessage.value = e.localizedMessage ?: "Failed to delete contact"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun clearMessages() {
+        _errorMessage.value = ""
+        _successMessage.value = ""
+    }
+}
+
+// ===========================================================
+// UI SCREEN
+// ===========================================================
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EmergencyContactsScreen(
-    viewModel: EmergencyContactsViewModel = viewModel()
-) {
+fun EmergencyContactsScreen() {
+    val context = LocalContext.current
+    val viewModel: EmergencyContactsViewModel = remember {
+        EmergencyContactsViewModel(context)
+    }
+
     val contacts by viewModel.contacts.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
+    val successMessage by viewModel.successMessage.collectAsState()
 
     var showAddDialog by remember { mutableStateOf(false) }
     var editingContact by remember { mutableStateOf<EmergencyContact?>(null) }
@@ -41,12 +217,12 @@ fun EmergencyContactsScreen(
                     Column {
                         Text(
                             "Emergency Contacts",
-                            fontSize = 24.sp,
+                            fontSize = 22.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
                             "${contacts.size}/10 contacts",
-                            fontSize = 14.sp,
+                            fontSize = 13.sp,
                             color = Color.White.copy(alpha = 0.9f)
                         )
                     }
@@ -88,9 +264,16 @@ fun EmergencyContactsScreen(
 
                 errorMessage.isNotEmpty() -> {
                     Column(
-                        modifier = Modifier.align(Alignment.Center),
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .padding(20.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
+                        Text(
+                            "⚠️",
+                            fontSize = 48.sp
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             "Error loading contacts",
                             fontSize = 18.sp,
@@ -99,11 +282,15 @@ fun EmergencyContactsScreen(
                         Text(
                             errorMessage,
                             fontSize = 14.sp,
-                            color = Color.Gray
+                            color = Color.Gray,
+                            modifier = Modifier.padding(top = 8.dp)
                         )
                         Button(
                             onClick = { viewModel.fetchContacts() },
-                            modifier = Modifier.padding(top = 16.dp)
+                            modifier = Modifier.padding(top = 16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFFF3B30)
+                            )
                         ) {
                             Text("Retry")
                         }
@@ -135,6 +322,14 @@ fun EmergencyContactsScreen(
         }
     }
 
+    // Success message snackbar
+    if (successMessage.isNotEmpty()) {
+        LaunchedEffect(successMessage) {
+            kotlinx.coroutines.delay(2000)
+            viewModel.clearMessages()
+        }
+    }
+
     // Add/Edit Dialog
     if (showAddDialog) {
         AddEditContactDialog(
@@ -143,14 +338,14 @@ fun EmergencyContactsScreen(
                 showAddDialog = false
                 editingContact = null
             },
-            onSave = { name, phone, relationship, isPrimary ->
+            onSave = { name, phone, relationship ->
                 if (editingContact != null) {
                     viewModel.updateContact(
                         editingContact!!.id,
-                        name, phone, relationship, isPrimary
+                        name, phone, relationship
                     )
                 } else {
-                    viewModel.addContact(name, phone, relationship, isPrimary)
+                    viewModel.addContact(name, phone, relationship)
                 }
                 showAddDialog = false
                 editingContact = null
@@ -170,18 +365,18 @@ fun EmptyContactsState() {
     ) {
         Text(
             "📱",
-            fontSize = 64.sp
+            fontSize = 80.sp
         )
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(24.dp))
         Text(
             "No Emergency Contacts",
-            fontSize = 20.sp,
+            fontSize = 22.sp,
             fontWeight = FontWeight.Bold
         )
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(12.dp))
         Text(
             "Add trusted contacts who will be notified during emergencies",
-            fontSize = 16.sp,
+            fontSize = 15.sp,
             color = Color.Gray,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
@@ -198,54 +393,53 @@ fun EmergencyContactCard(
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Column(modifier = Modifier.padding(15.dp)) {
-            // Header
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        contact.contactName,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    if (contact.isPrimary == true) {
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Surface(
-                            color = Color(0xFFFFD700),
-                            shape = RoundedCornerShape(10.dp)
-                        ) {
-                            Text(
-                                "PRIMARY",
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                            )
-                        }
-                    }
-                }
-            }
+        Column(modifier = Modifier.padding(16.dp)) {
+            // Name
+            Text(
+                contact.contactName,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF1A1A1A)
+            )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             // Phone
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("📞 ", fontSize = 16.sp)
-                Text(contact.phoneNumber, fontSize = 16.sp, color = Color(0xFF555555))
+                Icon(
+                    imageVector = Icons.Default.Phone,
+                    contentDescription = null,
+                    tint = Color(0xFF666666),
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    contact.phoneNumber,
+                    fontSize = 15.sp,
+                    color = Color(0xFF555555)
+                )
             }
 
             // Relationship
             contact.relationship?.let { rel ->
-                Spacer(modifier = Modifier.height(5.dp))
+                Spacer(modifier = Modifier.height(6.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("👤 ", fontSize = 14.sp)
-                    Text(rel, fontSize = 14.sp, color = Color(0xFF777777))
+                    Icon(
+                        imageVector = Icons.Default.Group,
+                        contentDescription = null,
+                        tint = Color(0xFF666666),
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        rel,
+                        fontSize = 14.sp,
+                        color = Color(0xFF777777)
+                    )
                 }
             }
 
@@ -253,15 +447,22 @@ fun EmergencyContactCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 10.dp),
+                    .padding(top = 12.dp),
                 horizontalArrangement = Arrangement.End
             ) {
-                TextButton(onClick = onEdit) {
-                    Text("Edit", color = Color(0xFF2563EB))
+                IconButton(onClick = onEdit) {
+                    Icon(
+                        Icons.Default.Edit,
+                        contentDescription = "Edit",
+                        tint = Color(0xFF2563EB)
+                    )
                 }
-                Spacer(modifier = Modifier.width(10.dp))
-                TextButton(onClick = { showDeleteDialog = true }) {
-                    Text("Delete", color = Color(0xFFFF3B30))
+                IconButton(onClick = { showDeleteDialog = true }) {
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = "Delete",
+                        tint = Color(0xFFFF3B30)
+                    )
                 }
             }
         }
@@ -270,16 +471,34 @@ fun EmergencyContactCard(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Delete Contact") },
-            text = { Text("Are you sure you want to delete this emergency contact?") },
+            icon = {
+                Icon(
+                    Icons.Default.Warning,
+                    contentDescription = null,
+                    tint = Color(0xFFFF3B30),
+                    modifier = Modifier.size(48.dp)
+                )
+            },
+            title = {
+                Text(
+                    "Delete Contact?",
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text("Are you sure you want to delete ${contact.contactName} from your emergency contacts?")
+            },
             confirmButton = {
-                TextButton(
+                Button(
                     onClick = {
                         onDelete()
                         showDeleteDialog = false
-                    }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFFF3B30)
+                    )
                 ) {
-                    Text("Delete", color = Color(0xFFFF3B30))
+                    Text("Delete")
                 }
             },
             dismissButton = {
@@ -296,19 +515,18 @@ fun EmergencyContactCard(
 fun AddEditContactDialog(
     contact: EmergencyContact?,
     onDismiss: () -> Unit,
-    onSave: (name: String, phone: String, relationship: String, isPrimary: Boolean) -> Unit
+    onSave: (name: String, phone: String, relationship: String) -> Unit
 ) {
     var contactName by remember { mutableStateOf(contact?.contactName ?: "") }
     var phoneNumber by remember { mutableStateOf(contact?.phoneNumber ?: "") }
     var relationship by remember { mutableStateOf(contact?.relationship ?: "") }
-    var isPrimary by remember { mutableStateOf(contact?.isPrimary ?: false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
                 if (contact != null) "Edit Contact" else "Add Emergency Contact",
-                fontSize = 24.sp,
+                fontSize = 20.sp,
                 fontWeight = FontWeight.Bold
             )
         },
@@ -317,79 +535,65 @@ fun AddEditContactDialog(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Name
                 OutlinedTextField(
                     value = contactName,
                     onValueChange = { contactName = it },
                     label = { Text("Contact Name *") },
                     placeholder = { Text("e.g., Mom, John Doe") },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFFFF3B30),
+                        focusedLabelColor = Color(0xFFFF3B30)
+                    )
                 )
 
-                // Phone
                 OutlinedTextField(
                     value = phoneNumber,
                     onValueChange = { phoneNumber = it },
                     label = { Text("Phone Number *") },
                     placeholder = { Text("+919876543210") },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFFFF3B30),
+                        focusedLabelColor = Color(0xFFFF3B30)
+                    )
                 )
 
-                // Relationship
                 OutlinedTextField(
                     value = relationship,
                     onValueChange = { relationship = it },
                     label = { Text("Relationship (Optional)") },
                     placeholder = { Text("e.g., Mother, Friend") },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
-
-                // Primary checkbox
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Checkbox(
-                        checked = isPrimary,
-                        onCheckedChange = { isPrimary = it },
-                        colors = CheckboxDefaults.colors(
-                            checkedColor = Color(0xFFFF3B30)
-                        )
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFFFF3B30),
+                        focusedLabelColor = Color(0xFFFF3B30)
                     )
-                    Text("Set as Primary Contact")
-                }
+                )
             }
         },
         confirmButton = {
             Button(
                 onClick = {
                     if (contactName.isNotBlank() && phoneNumber.isNotBlank()) {
-                        onSave(contactName, phoneNumber, relationship, isPrimary)
+                        onSave(contactName, phoneNumber, relationship)
                     }
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFFFF3B30)
-                )
+                ),
+                enabled = contactName.isNotBlank() && phoneNumber.isNotBlank()
             ) {
                 Text(if (contact != null) "Update" else "Save")
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text("Cancel", color = Color(0xFF666666))
             }
         }
     )
 }
-
-// Data class for Emergency Contact
-//data class EmergencyContact(
-//    val id: Long,
-//    val contactName: String,
-//    val phoneNumber: String,
-//    val relationship: String?,
-//    val isPrimary: Boolean?
-//)

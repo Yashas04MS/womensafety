@@ -1,22 +1,19 @@
 package com.example.womensafetyapp.ui.emergency
 
-import android.Manifest
+import android.app.Application
 import android.content.Context
-import android.content.pm.PackageManager
 import android.location.Location
-import androidx.core.content.ContextCompat
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.womensafetyapp.network.EmergencyAlertRequest
 import com.example.womensafetyapp.network.apiClient
-import com.google.android.gms.location.FusedLocationProviderClient
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class SOSEmergencyViewModel : ViewModel() {
+class SOSEmergencyViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _isTriggering = MutableStateFlow(false)
     val isTriggering: StateFlow<Boolean> = _isTriggering
@@ -34,6 +31,13 @@ class SOSEmergencyViewModel : ViewModel() {
     val currentLocation: StateFlow<Location?> = _currentLocation
 
     private var countdownJob: Job? = null
+
+    // Get token from SharedPreferences
+    private fun getToken(): String {
+        val token = getApplication<Application>().getSharedPreferences("user_token", Context.MODE_PRIVATE)
+            .getString("jwt", "") ?: ""
+        return "Bearer $token"
+    }
 
     fun triggerSOSAlert() {
         viewModelScope.launch {
@@ -105,12 +109,6 @@ class SOSEmergencyViewModel : ViewModel() {
 
     fun updateLocation(location: Location) {
         _currentLocation.value = location
-    }
-
-    private fun getToken(): String {
-        // TODO: Get token from SharedPreferences
-        // For now returning empty, you should implement proper token management
-        return "Bearer YOUR_TOKEN_HERE"
     }
 
     override fun onCleared() {
