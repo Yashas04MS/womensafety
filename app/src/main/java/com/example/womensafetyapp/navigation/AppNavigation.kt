@@ -11,7 +11,9 @@ sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Register : Screen("register")
     object Forgot : Screen("forgot")
-    object VerifyOTP : Screen("verify_otp")
+    object VerifyOTP : Screen("verify_otp/{email}/{token}") {
+        fun createRoute(email: String, token: String) = "verify_otp/$email/$token"
+    }
     object ResetPassword : Screen("reset_pass")
     object Home : Screen("home")
 }
@@ -23,15 +25,28 @@ fun AppNavigation(navController: NavHostController) {
         startDestination = Screen.Login.route
     ) {
 
-        composable(Screen.Login.route) { LoginScreen(navController) }
-        composable(Screen.Register.route) { RegisterScreen(navController) }
-        composable(Screen.Forgot.route) { ForgotPasswordScreen(navController) }
-//        composable(Screen.VerifyOTP.route) { VerifyOTPScreen(navController) }
-        composable("verify_otp/{email}") { backStackEntry ->
-            val email = backStackEntry.arguments?.getString("email") ?: ""
-            VerifyOtpScreen(navController, email)
+        composable(Screen.Login.route) {
+            LoginScreen(navController)
         }
-        composable(Screen.ResetPassword.route) { ResetPasswordScreen(navController) }
+
+        composable(Screen.Register.route) {
+            RegisterScreen(navController)
+        }
+
+        composable(Screen.Forgot.route) {
+            ForgotPasswordScreen(navController)
+        }
+
+        composable("verify_otp/{email}/{token}") { backStackEntry ->
+            val email = backStackEntry.arguments?.getString("email") ?: ""
+            val token = backStackEntry.arguments?.getString("token") ?: ""
+            VerifyOtpScreen(navController, email, token)
+        }
+
+        composable(Screen.ResetPassword.route) {
+            ResetPasswordScreen(navController)
+        }
+
         composable(Screen.Home.route) {
             HomeScreen()
         }

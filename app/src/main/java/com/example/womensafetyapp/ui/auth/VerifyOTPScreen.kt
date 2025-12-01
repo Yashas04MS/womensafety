@@ -1,100 +1,10 @@
-//package com.example.womensafetyapp.ui.auth
-//
-//import androidx.compose.foundation.layout.*
-//import androidx.compose.material3.*
-//import androidx.compose.runtime.*
-//import androidx.compose.ui.Modifier
-//import androidx.compose.ui.unit.dp
-//import androidx.navigation.NavHostController
-//
-////@Composable
-////fun VerifyOTPScreen(navController: NavHostController, email: String) {
-////
-////    var otp by remember { mutableStateOf("") }
-////
-////    Column(
-////        modifier = Modifier
-////            .fillMaxSize()
-////            .padding(24.dp)
-////    ) {
-////
-////        Text(text = "Verify OTP", style = MaterialTheme.typography.headlineMedium)
-////
-////        Spacer(modifier = Modifier.height(16.dp))
-////
-////        OutlinedTextField(
-////            value = otp,
-////            onValueChange = { otp = it },
-////            label = { Text("Enter OTP") },
-////            modifier = Modifier.fillMaxWidth()
-////        )
-////
-////        Spacer(modifier = Modifier.height(24.dp))
-////
-////        Button(
-////            onClick = {
-////                navController.navigate("reset_pass")
-////            },
-////            modifier = Modifier.fillMaxWidth()
-////        ) {
-////            Text("Verify OTP")
-////        }
-////
-////        Spacer(modifier = Modifier.height(12.dp))
-////
-////        TextButton(onClick = { navController.popBackStack() }) {
-////            Text("Back")
-////        }
-////    }
-////}
-//@Composable
-//fun VerifyOTPScreen(navController: NavHostController) {
-//
-//    var otp by remember { mutableStateOf("") }
-//
-//    Column(
-//        modifier = Modifier
-//            .fillMaxSize()
-//            .padding(24.dp)
-//    ) {
-//
-//        Text(text = "Verify OTP", style = MaterialTheme.typography.headlineMedium)
-//
-//        Spacer(modifier = Modifier.height(16.dp))
-//
-//        OutlinedTextField(
-//            value = otp,
-//            onValueChange = { otp = it },
-//            label = { Text("Enter OTP") },
-//            modifier = Modifier.fillMaxWidth()
-//        )
-//
-//        Spacer(modifier = Modifier.height(24.dp))
-//
-//        Button(
-//            onClick = {
-//                navController.navigate("reset_pass")
-//            },
-//            modifier = Modifier.fillMaxWidth()
-//        ) {
-//            Text("Verify OTP")
-//        }
-//
-//        Spacer(modifier = Modifier.height(12.dp))
-//
-//        TextButton(onClick = { navController.popBackStack() }) {
-//            Text("Back")
-//        }
-//    }
-//}
-
-
 package com.example.womensafetyapp.ui.auth
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
@@ -110,19 +20,20 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.womensafetyapp.R
-import androidx.compose.foundation.shape.RoundedCornerShape
-
 
 @Composable
 fun VerifyOtpScreen(
     navController: NavController,
-    email: String           // Pass email from register screen
+    email: String,
+    token: String
 ) {
-    val vm = remember { VerifyOtpViewModel() }
+    val vm: VerifyOtpViewModel = viewModel()
 
     var otp by remember { mutableStateOf("") }
+    var showResendMessage by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
 
@@ -215,31 +126,57 @@ fun VerifyOtpScreen(
 
                 Spacer(Modifier.height(22.dp))
 
-                // VERIFY BUTTON
+                // Verify button
                 Button(
                     onClick = {
                         vm.verifyOtp(
-                            email = email,
                             otp = otp,
+                            token = token,
                             onSuccess = {
                                 navController.navigate("home") {
                                     popUpTo("register") { inclusive = true }
                                 }
                             }
                         )
-                    }
-                )
-            },
-                modifier = Modifier
+                    },
+                    modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xCDFF7B07),
                         contentColor = Color.White
                     ),
-                    shape = RoundedCornerShape(18.dp)
+                    shape = RoundedCornerShape(18.dp),
+                    enabled = !vm.isLoading
                 ) {
-                    Text("Verify")
+                    if (vm.isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = Color.White
+                        )
+                    } else {
+                        Text("Verify")
+                    }
+                }
+
+                Spacer(Modifier.height(16.dp))
+
+                // Resend OTP button
+                TextButton(
+                    onClick = {
+                        vm.resendOtp(
+                            token = token,
+                            onSuccess = {
+                                showResendMessage = true
+                            },
+                            onError = { error ->
+                                showResendMessage = false
+                            }
+                        )
+                    },
+                    enabled = !vm.isLoading
+                ) {
+                    Text("Resend OTP", color = Color.White)
                 }
 
                 Spacer(Modifier.height(10.dp))
@@ -247,8 +184,11 @@ fun VerifyOtpScreen(
                 if (vm.errorMessage.isNotEmpty()) {
                     Text(vm.errorMessage, color = Color.Red)
                 }
+
+                if (showResendMessage) {
+                    Text("OTP sent successfully!", color = Color.Green)
+                }
             }
         }
     }
 }
-

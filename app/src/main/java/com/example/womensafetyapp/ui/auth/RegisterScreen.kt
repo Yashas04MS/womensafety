@@ -20,6 +20,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.womensafetyapp.R
 
@@ -32,11 +33,11 @@ fun RegisterScreen(navController: NavController) {
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
 
-    val vm = remember { RegisterViewModel() }
+    val vm: RegisterViewModel = viewModel()
 
     Box(modifier = Modifier.fillMaxSize()) {
 
-        // 🌫️ BLURRED BACKGROUND
+        // Blurred background
         Image(
             painter = painterResource(id = R.drawable.login_bg),
             contentDescription = null,
@@ -46,7 +47,7 @@ fun RegisterScreen(navController: NavController) {
                 .blur(20.dp)
         )
 
-        // 🎯 CENTERED CARD
+        // Centered card
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
@@ -68,7 +69,7 @@ fun RegisterScreen(navController: NavController) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
-                // ICON
+                // Icon
                 Box(
                     modifier = Modifier
                         .size(70.dp)
@@ -95,7 +96,7 @@ fun RegisterScreen(navController: NavController) {
 
                 Spacer(Modifier.height(20.dp))
 
-                // NAME INPUT
+                // Input fields
                 RegisterInputField(
                     label = "Full Name",
                     value = name,
@@ -104,7 +105,6 @@ fun RegisterScreen(navController: NavController) {
 
                 Spacer(Modifier.height(14.dp))
 
-                // EMAIL
                 RegisterInputField(
                     label = "Email",
                     value = email,
@@ -113,7 +113,6 @@ fun RegisterScreen(navController: NavController) {
 
                 Spacer(Modifier.height(14.dp))
 
-                // PHONE
                 RegisterInputField(
                     label = "Phone Number",
                     value = phone,
@@ -122,7 +121,6 @@ fun RegisterScreen(navController: NavController) {
 
                 Spacer(Modifier.height(14.dp))
 
-                // PASSWORD
                 RegisterInputField(
                     label = "Password",
                     value = password,
@@ -131,7 +129,6 @@ fun RegisterScreen(navController: NavController) {
 
                 Spacer(Modifier.height(14.dp))
 
-                // CONFIRM PASSWORD
                 RegisterInputField(
                     label = "Confirm Password",
                     value = confirmPassword,
@@ -140,10 +137,9 @@ fun RegisterScreen(navController: NavController) {
 
                 Spacer(Modifier.height(22.dp))
 
-                // REGISTER BUTTON
+                // Register button
                 Button(
                     onClick = {
-
                         if (password != confirmPassword) {
                             vm.errorMessage = "Passwords do not match"
                             return@Button
@@ -154,10 +150,10 @@ fun RegisterScreen(navController: NavController) {
                             email = email,
                             phone = phone,
                             password = password
-                        ) {
-                            navController.navigate("verify_otp/$email")
+                        ) { userEmail, jwtToken ->
+                            // Navigate to OTP verification with email and token
+                            navController.navigate("verify_otp/$userEmail/$jwtToken")
                         }
-
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -166,9 +162,17 @@ fun RegisterScreen(navController: NavController) {
                         containerColor = Color(0xCDFF7B07),
                         contentColor = Color.White
                     ),
-                    shape = RoundedCornerShape(18.dp)
+                    shape = RoundedCornerShape(18.dp),
+                    enabled = !vm.isLoading
                 ) {
-                    Text("Register")
+                    if (vm.isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = Color.White
+                        )
+                    } else {
+                        Text("Register")
+                    }
                 }
 
                 Spacer(Modifier.height(10.dp))

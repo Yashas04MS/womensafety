@@ -1,53 +1,8 @@
-//package com.example.womensafetyapp.ui.auth
-//
-//import androidx.lifecycle.ViewModel
-//import androidx.lifecycle.viewModelScope
-//import com.example.womensafetyapp.network.apiClient
-//import com.example.womensafetyapp.network.models.RegisterRequest
-//import kotlinx.coroutines.launch
-//
-//class RegisterViewModel : ViewModel() {
-//
-//    var errorMessage = ""
-//    var successMessage = ""
-//    var navigateToVerification: (() -> Unit)? = null
-//
-//    fun register(
-//        name: String,
-//        email: String,
-//        phone: String,
-//        password: String,
-//    ) {
-//        val names = name.split(" ", limit = 2)
-//        val firstName = names.getOrNull(0) ?: ""
-//        val lastName = names.getOrNull(1) ?: ""
-//
-//        viewModelScope.launch {
-//            try {
-//                val body = RegisterRequest(
-//                    email = email,
-//                    password = password,
-//                    firstName = firstName,
-//                    lastName = lastName,
-//                    phoneNumber = phone.trim(),
-//                    role = "USER"
-//                )
-//
-//                val response = apiClient.api.register(body)
-//
-//                successMessage = response.message.orEmpty()
-//
-//                // 👉 Instead of going to Login, go to Verification
-//                navigateToVerification?.invoke()
-//
-//            } catch (e: Exception) {
-//                errorMessage = e.localizedMessage ?: "Registration failed"
-//            }
-//        }
-//    }
-//}
 package com.example.womensafetyapp.ui.auth
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.womensafetyapp.network.apiClient
@@ -56,18 +11,19 @@ import kotlinx.coroutines.launch
 
 class RegisterViewModel : ViewModel() {
 
-    var errorMessage = ""
-    var successMessage = ""
+    var errorMessage by mutableStateOf("")
+    var successMessage by mutableStateOf("")
+    var isLoading by mutableStateOf(false)
 
-    // Assigned from UI (Composable)
-    var navigateToVerification: ((email: String) -> Unit)? = null
+    // Store JWT token after registration
+    var jwtToken by mutableStateOf("")
 
     fun register(
         name: String,
         email: String,
         phone: String,
         password: String,
-        onSuccess: () -> Unit
+        onSuccess: (String, String) -> Unit // Pass email and token
     ) {
         val parts = name.split(" ", limit = 2)
         val first = parts.getOrNull(0) ?: ""
@@ -75,6 +31,9 @@ class RegisterViewModel : ViewModel() {
 
         viewModelScope.launch {
             try {
+                isLoading = true
+                errorMessage = ""
+
                 val body = RegisterRequest(
                     email = email,
                     password = password,
@@ -85,13 +44,18 @@ class RegisterViewModel : ViewModel() {
                 )
 
                 val response = apiClient.api.register(body)
-                successMessage = response.message.orEmpty()
 
-                // 🔥 redirect directly to OTP verification screen
-                navigateToVerification?.invoke(email)
+                // Store token
+                jwtToken = response.token ?: ""
+                successMessage = response.message ?: "Registration successful"
+
+                // Navigate to OTP verification with email and token
+                onSuccess(email, jwtToken)
 
             } catch (e: Exception) {
                 errorMessage = e.localizedMessage ?: "Registration failed"
+            } finally {
+                isLoading = false
             }
         }
     }

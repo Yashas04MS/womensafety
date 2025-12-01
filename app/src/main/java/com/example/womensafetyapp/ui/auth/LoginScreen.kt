@@ -16,6 +16,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -28,16 +29,15 @@ import com.example.womensafetyapp.R
 fun LoginScreen(navController: NavController) {
 
     val viewModel: LoginViewModel = viewModel()
+    val context = LocalContext.current
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-
     var successMessage by remember { mutableStateOf("") }
-    var errorMessage by remember { mutableStateOf("") }
 
     Box(modifier = Modifier.fillMaxSize()) {
 
-        // 🌫️ BLURRED BACKGROUND IMAGE
+        // Blurred background image
         Image(
             painter = painterResource(id = R.drawable.login_bg),
             contentDescription = null,
@@ -47,7 +47,7 @@ fun LoginScreen(navController: NavController) {
                 .blur(20.dp)
         )
 
-        // 🎯 CENTERED CARD
+        // Centered card
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
@@ -134,15 +134,16 @@ fun LoginScreen(navController: NavController) {
                 Button(
                     onClick = {
                         viewModel.login(
-                            email,
-                            password,
+                            email = email,
+                            password = password,
+                            context = context,
                             onSuccess = {
                                 successMessage = it
-                                errorMessage = ""
-                                navController.navigate("home")
+                                navController.navigate("home") {
+                                    popUpTo("login") { inclusive = true }
+                                }
                             },
                             onError = {
-                                errorMessage = it
                                 successMessage = ""
                             }
                         )
@@ -154,15 +155,26 @@ fun LoginScreen(navController: NavController) {
                         containerColor = Color(0xCDFF7B07),
                         contentColor = Color.White
                     ),
-                    shape = RoundedCornerShape(18.dp)
+                    shape = RoundedCornerShape(18.dp),
+                    enabled = !viewModel.isLoading
                 ) {
-                    Text("Login")
+                    if (viewModel.isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = Color.White
+                        )
+                    } else {
+                        Text("Login")
+                    }
                 }
 
                 Spacer(Modifier.height(10.dp))
 
-                if (successMessage.isNotEmpty()) Text(successMessage, color = Color.Green)
-                if (errorMessage.isNotEmpty()) Text(errorMessage, color = Color.Black)
+                if (successMessage.isNotEmpty())
+                    Text(successMessage, color = Color.Green)
+
+                if (viewModel.errorMessage.isNotEmpty())
+                    Text(viewModel.errorMessage, color = Color.Red)
 
                 Spacer(Modifier.height(12.dp))
 
