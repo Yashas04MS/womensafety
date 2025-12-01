@@ -12,12 +12,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun HomeScreen(
@@ -33,7 +33,8 @@ fun HomeScreen(
             .padding(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Top Greeting + Profile
+
+        // Top Bar
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -50,16 +51,21 @@ fun HomeScreen(
                     .size(42.dp)
                     .clip(CircleShape)
                     .background(Color(0xFFFB7185))
-                    .clickable { /* Navigate to profile */ },
+                    .clickable { /* Profile */ },
                 contentAlignment = Alignment.Center
             ) {
-                Text("U", color = Color.White, fontWeight = FontWeight.Bold)
+                Text(
+                    "U",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
+                )
             }
         }
 
         Spacer(modifier = Modifier.height(40.dp))
 
-        // 🚨 SOS Button
+        // SOS Button
         Box(
             modifier = Modifier
                 .size(220.dp)
@@ -87,28 +93,29 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(45.dp))
 
-        // Quick Actions
+        // Quick Actions Row
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             QuickActionCard(
+                emoji = "📍",
                 title = "Share\nLocation",
                 color = Color(0xFF2563EB),
                 onClick = {
-                    // Share current location via SMS
                     val intent = Intent(Intent.ACTION_SENDTO).apply {
                         data = Uri.parse("smsto:")
-                        putExtra("sms_body", "I'm sharing my location with you for safety.")
+                        putExtra("sms_body", "I'm sharing my location for safety.")
                     }
                     context.startActivity(intent)
                 }
             )
+
             QuickActionCard(
+                emoji = "🚓",
                 title = "Call\nPolice",
                 color = Color(0xFF16A34A),
                 onClick = {
-                    // Call emergency number (100 for India, 911 for US)
                     val intent = Intent(Intent.ACTION_DIAL).apply {
                         data = Uri.parse("tel:100")
                     }
@@ -119,7 +126,7 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Emergency Contacts Button
+        // Emergency Contacts Btn
         OutlinedButton(
             onClick = onNavigateToContacts,
             modifier = Modifier.fillMaxWidth(),
@@ -136,13 +143,13 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(30.dp))
 
-        // Feature Cards
+        // Safety Feature List
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
                 containerColor = Color.White
             ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            elevation = CardDefaults.cardElevation(4.dp)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
@@ -154,16 +161,16 @@ fun HomeScreen(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 FeatureItem("📱", "Emergency Contacts", "Manage trusted contacts")
-                FeatureItem("🚨", "SOS Alert", "One-tap emergency notification")
-                FeatureItem("📍", "Live Location", "Real-time location sharing")
-                FeatureItem("🔔", "Smart Alerts", "AI-powered danger detection")
+                FeatureItem("🚨", "SOS Alert", "One-tap emergency help")
+                FeatureItem("📍", "Live Location", "Real-time tracking")
+                FeatureItem("🔔", "Smart Alerts", "AI-powered danger alerts")
             }
         }
     }
 }
 
 @Composable
-fun QuickActionCard(title: String, color: Color, onClick: () -> Unit) {
+fun QuickActionCard(emoji: String, title: String, color: Color, onClick: () -> Unit) {
     Column(
         modifier = Modifier
             .width(150.dp)
@@ -174,9 +181,14 @@ fun QuickActionCard(title: String, color: Color, onClick: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
+            text = emoji,
+            fontSize = 36.sp,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        Text(
             text = title,
             color = Color.White,
-            fontSize = 18.sp,
+            fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center
         )
@@ -188,13 +200,13 @@ fun FeatureItem(icon: String, title: String, description: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
+            .padding(vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = icon,
-            fontSize = 24.sp,
-            modifier = Modifier.padding(end = 12.dp)
+            fontSize = 28.sp,
+            modifier = Modifier.padding(end = 14.dp)
         )
         Column {
             Text(

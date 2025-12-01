@@ -1,4 +1,4 @@
-package com.example.womensafetyapp.ui.home
+package com.example.womensafetyapp.ui.emergency
 
 import android.Manifest
 import android.content.Context
