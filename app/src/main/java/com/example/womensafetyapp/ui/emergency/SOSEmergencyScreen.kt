@@ -1,5 +1,9 @@
 package com.example.womensafetyapp.ui.emergency
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -11,25 +15,50 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
-import kotlinx.coroutines.delay
 
 @Composable
 fun SOSEmergencyScreen(
     viewModel: SOSEmergencyViewModel = viewModel(),
     onNavigateToContacts: () -> Unit = {}
 ) {
+    val context = LocalContext.current
     val alertState by viewModel.alertState.collectAsState()
     val isTriggering by viewModel.isTriggering.collectAsState()
     val countdown by viewModel.countdown.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
 
     var showConfirmDialog by remember { mutableStateOf(false) }
-    var showCancelDialog by remember { mutableStateOf(false) }
+    var locationPermissionGranted by remember { mutableStateOf(false) }
+
+    // Location permission launcher
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        locationPermissionGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+
+        if (locationPermissionGranted && showConfirmDialog) {
+            // User granted permission and dialog is still showing
+            // Trigger will happen when they click confirm
+        }
+    }
+
+    // Check location permission on start
+    LaunchedEffect(Unit) {
+        val hasPermission = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+
+        locationPermissionGranted = hasPermission
+    }
 
     Column(
         modifier = Modifier
@@ -45,7 +74,7 @@ fun SOSEmergencyScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Welcome Back 👋",
+                text = "Emergency SOS 🚨",
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -64,6 +93,30 @@ fun SOSEmergencyScreen(
 
         Spacer(modifier = Modifier.height(40.dp))
 
+        // Location status indicator
+        if (!locationPermissionGranted) {
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFFFFF3CD)
+                ),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("⚠️", fontSize = 20.sp)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        "Location permission needed for accurate alerts",
+                        fontSize = 13.sp,
+                        color = Color(0xFF92400E)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
         // SOS Button with countdown overlay
         Box(
             contentAlignment = Alignment.Center
@@ -77,6 +130,15 @@ fun SOSEmergencyScreen(
                         if (isTriggering) Color(0xFFFF6B6B) else Color(0xFFFF3B30)
                     )
                     .clickable(enabled = !isTriggering) {
+                        // Check location permission before showing dialog
+                        if (!locationPermissionGranted) {
+                            locationPermissionLauncher.launch(
+                                arrayOf(
+                                    Manifest.permission.ACCESS_FINE_LOCATION,
+                                    Manifest.permission.ACCESS_COARSE_LOCATION
+                                )
+                            )
+                        }
                         showConfirmDialog = true
                     },
                 contentAlignment = Alignment.Center
@@ -217,6 +279,16 @@ fun SOSEmergencyScreen(
                     Text("• Emergency message")
                     Text("• Nearby police & hospitals")
                     Spacer(modifier = Modifier.height(10.dp))
+
+                    if (!locationPermissionGranted) {
+                        Text(
+                            "⚠️ Location not available - alert will be sent without location",
+                            fontSize = 13.sp,
+                            color = Color(0xFFFF3B30)
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                    }
+
                     Text(
                         "Alert will be sent in 5 seconds unless you cancel.",
                         fontSize = 14.sp,
