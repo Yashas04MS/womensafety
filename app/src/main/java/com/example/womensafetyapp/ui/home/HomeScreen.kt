@@ -31,12 +31,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.LocationServices
-import kotlinx.coroutines.launch
 
 @Composable
 fun HomeScreen(
     onNavigateToSOS: () -> Unit = {},
-    onNavigateToContacts: () -> Unit = {}
+    onNavigateToContacts: () -> Unit = {},
+    onNavigateToScheduledSharing: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -358,7 +358,7 @@ fun HomeScreen(
                         title = "Scheduled Sharing",
                         description = "Plan location sharing",
                         color = Color(0xFF14B8A6),
-                        onClick = { /* TODO: Navigate to Scheduled Sharing */ }
+                        onClick = { onNavigateToScheduledSharing() }
                     )
                 }
 

@@ -3,6 +3,8 @@ package com.example.womensafetyapp.network
 import com.example.womensafetyapp.network.models.*
 import com.example.womensafetyapp.ui.emergency.EmergencyContact
 import com.example.womensafetyapp.ui.emergency.EmergencyContactDTO
+import com.example.womensafetyapp.ui.scheduled.ScheduledLocationSharingRequest
+import com.example.womensafetyapp.ui.scheduled.ScheduledLocationSharingResponse
 import retrofit2.http.*
 
 interface ApiService {
@@ -114,6 +116,31 @@ interface ApiService {
         @Query("message") message: String?,
         @Header("Authorization") token: String
     ): Map<String, String>
+
+    // ==================== SCHEDULED LOCATION SHARING ====================
+
+    @POST("api/location/scheduled-sharing")
+    suspend fun createScheduledSharing(
+        @Body request: ScheduledLocationSharingRequest,
+        @Header("Authorization") token: String
+    ): ScheduledLocationSharingResponse
+
+    @GET("api/location/scheduled-sharing")
+    suspend fun getUserScheduledSharing(
+        @Header("Authorization") token: String
+    ): List<ScheduledLocationSharingResponse>
+
+    @PUT("api/location/scheduled-sharing/{sharingId}/arrived")
+    suspend fun markArrived(
+        @Path("sharingId") sharingId: Long,
+        @Header("Authorization") token: String
+    ): ScheduledLocationSharingResponse
+
+    @PUT("api/location/scheduled-sharing/{sharingId}/cancel")
+    suspend fun cancelScheduledSharing(
+        @Path("sharingId") sharingId: Long,
+        @Header("Authorization") token: String
+    ): ScheduledLocationSharingResponse
 }
 
 // Emergency Alert DTOs

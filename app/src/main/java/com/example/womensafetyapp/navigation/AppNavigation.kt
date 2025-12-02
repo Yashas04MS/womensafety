@@ -8,6 +8,7 @@ import com.example.womensafetyapp.ui.auth.*
 import com.example.womensafetyapp.ui.home.HomeScreen
 import com.example.womensafetyapp.ui.emergency.EmergencyContactsScreen
 import com.example.womensafetyapp.ui.emergency.SOSEmergencyScreen
+import com.example.womensafetyapp.ui.scheduled.ScheduledSharingScreen
 
 sealed class Screen(val route: String) {
     object Login : Screen("login")
@@ -20,6 +21,8 @@ sealed class Screen(val route: String) {
     object Home : Screen("home")
     object EmergencyContacts : Screen("emergency_contacts")
     object SOSEmergency : Screen("sos_emergency")
+
+    object ScheduledSharing : Screen("scheduled_sharing")
 }
 
 @Composable
@@ -58,6 +61,9 @@ fun AppNavigation(navController: NavHostController) {
                 },
                 onNavigateToContacts = {
                     navController.navigate(Screen.EmergencyContacts.route)
+                },
+                onNavigateToScheduledSharing = { // ADD THIS BLOCK
+                    navController.navigate(Screen.ScheduledSharing.route)
                 }
             )
         }
@@ -73,6 +79,14 @@ fun AppNavigation(navController: NavHostController) {
 
         composable(Screen.EmergencyContacts.route) {
             EmergencyContactsScreen()
+        }
+
+        composable(Screen.ScheduledSharing.route) {
+            ScheduledSharingScreen(
+                onBack = {
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }
