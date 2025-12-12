@@ -1,5 +1,6 @@
 package com.example.womensafetyapp.ui.fakeCall
 
+import android.media.Ringtone
 import android.media.RingtoneManager
 import android.os.Build
 import android.os.VibrationEffect
@@ -35,26 +36,55 @@ fun IncomingFakeCallScreen(
     var callDuration by remember { mutableStateOf(0) }
     var autoAnswerCountdown by remember { mutableStateOf(callResponse.autoAnswerDelaySeconds) }
 
-    // Vibration
-    LaunchedEffect(Unit) {
-        if (callResponse.vibrateEnabled) {
-            val vibrator = context.getSystemService(android.content.Context.VIBRATOR_SERVICE) as Vibrator
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val pattern = longArrayOf(0, 500, 1000)
-                vibrator.vibrate(VibrationEffect.createWaveform(pattern, 0))
-            } else {
-                @Suppress("DEPRECATION")
-                vibrator.vibrate(longArrayOf(0, 500, 1000), 0)
-            }
-        }
+    // Store ringtone and vibrator references
+    var ringtone by remember { mutableStateOf<Ringtone?>(null) }
+    var vibrator by remember { mutableStateOf<Vibrator?>(null) }
 
-        // Ringtone (optional - simplified for demo)
+    // Start vibration and ringtone
+    LaunchedEffect(Unit) {
         try {
+            // Start vibration
+            if (callResponse.vibrateEnabled) {
+                vibrator = context.getSystemService(android.content.Context.VIBRATOR_SERVICE) as Vibrator
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    val pattern = longArrayOf(0, 500, 1000)
+                    vibrator?.vibrate(VibrationEffect.createWaveform(pattern, 0))
+                } else {
+                    @Suppress("DEPRECATION")
+                    vibrator?.vibrate(longArrayOf(0, 500, 1000), 0)
+                }
+            }
+
+            // Start ringtone
             val ringtoneUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
-            val ringtone = RingtoneManager.getRingtone(context, ringtoneUri)
-            ringtone.play()
+            ringtone = RingtoneManager.getRingtone(context, ringtoneUri)
+            ringtone?.play()
         } catch (e: Exception) {
             e.printStackTrace()
+        }
+    }
+
+    // Stop ringtone and vibration when call becomes active
+    LaunchedEffect(isCallActive) {
+        if (isCallActive) {
+            try {
+                ringtone?.stop()
+                vibrator?.cancel()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    // Cleanup on dispose
+    DisposableEffect(Unit) {
+        onDispose {
+            try {
+                ringtone?.stop()
+                vibrator?.cancel()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 
@@ -101,10 +131,19 @@ fun IncomingFakeCallScreen(
                 callResponse = callResponse,
                 autoAnswerCountdown = autoAnswerCountdown,
                 onAnswer = {
-                    onAnswer()
                     isCallActive = true
+                    onAnswer()
                 },
-                onDecline = onDecline
+                onDecline = {
+                    // Stop ringtone and vibration on decline
+                    try {
+                        ringtone?.stop()
+                        vibrator?.cancel()
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                    onDecline()
+                }
             )
         } else {
             // Active Call UI
