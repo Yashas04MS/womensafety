@@ -35,6 +35,9 @@ class SOSEmergencyViewModel(application: Application) : AndroidViewModel(applica
     private val _errorMessage = MutableStateFlow("")
     val errorMessage: StateFlow<String> = _errorMessage
 
+    private val _successMessage = MutableStateFlow("")
+    val successMessage: StateFlow<String> = _successMessage
+
     private val _currentLocation = MutableStateFlow<Location?>(null)
     val currentLocation: StateFlow<Location?> = _currentLocation
 
@@ -54,6 +57,8 @@ class SOSEmergencyViewModel(application: Application) : AndroidViewModel(applica
             try {
                 _isTriggering.value = true
                 _errorMessage.value = ""
+                _successMessage.value = ""
+                _alertState.value = null
                 _countdown.value = 5
 
                 // Fetch location first
@@ -71,8 +76,10 @@ class SOSEmergencyViewModel(application: Application) : AndroidViewModel(applica
                 }
 
             } catch (e: Exception) {
-                _errorMessage.value = e.localizedMessage ?: "Failed to trigger alert"
+                _errorMessage.value = "Failed to trigger alert: ${e.localizedMessage}"
                 _isTriggering.value = false
+                _successMessage.value = ""
+                Log.e("SOSViewModel", "Error triggering alert", e)
             }
         }
     }
@@ -135,34 +142,66 @@ class SOSEmergencyViewModel(application: Application) : AndroidViewModel(applica
 
             _alertState.value = response.alertStatus
             _errorMessage.value = ""
+            _successMessage.value = "✅ Alert sent successfully to ${response.contactsNotifiedCount ?: 0} contact(s)!"
 
             Log.d("SOSViewModel", "Alert sent successfully: ${response.message}")
 
-            // Keep alert state for 5 seconds then reset
-            delay(5000)
+            // Keep success message for 8 seconds then reset
+            delay(8000)
             _isTriggering.value = false
-            _alertState.value = null // Clear alert state after showing success
+            _successMessage.value = ""
+            _alertState.value = null
 
         } catch (e: Exception) {
             Log.e("SOSViewModel", "Error sending alert: ${e.message}", e)
-            _errorMessage.value = when {
-                e.message?.contains("No emergency contacts") == true ->
-                    "Please add emergency contacts first!"
-                else -> e.localizedMessage ?: "Failed to send alert"
+
+            // Parse error message to provide user-friendly feedback
+            val userFriendlyError = when {
+                e.message?.contains("No emergency contacts", ignoreCase = true) == true ->
+                    "No emergency contacts found. Please add emergency contacts first!"
+
+                e.message?.contains("401") == true || e.message?.contains("Unauthorized") == true ->
+                    "Session expired. Please login again."
+
+                e.message?.contains("404") == true ->
+                    "Service not found. Please check your connection."
+
+                e.message?.contains("500") == true ->
+                    "Server error. Please try again later."
+
+                e.message?.contains("timeout", ignoreCase = true) == true ->
+                    "Request timeout. Please check your internet connection."
+
+                e.message?.contains("Unable to resolve host") == true ->
+                    "No internet connection. Please check your network."
+
+                else -> "Failed to send alert. Please try again."
             }
+
+            _errorMessage.value = userFriendlyError
+            _successMessage.value = ""
             _isTriggering.value = false
-            _alertState.value = null // Clear alert state on error
+            _alertState.value = null
+
+            // Auto-clear error after 10 seconds
+            viewModelScope.launch {
+                delay(10000)
+                _errorMessage.value = ""
+            }
         }
     }
 
     fun cancelAlert() {
+        Log.d("SOSViewModel", "Alert cancelled by user")
+
         countdownJob?.cancel()
         _isTriggering.value = false
         _countdown.value = 5
-        _alertState.value = null // Clear any previous success state
+        _alertState.value = null
+        _successMessage.value = ""
         _errorMessage.value = "Alert cancelled"
 
-        // Clear error after 3 seconds
+        // Clear cancellation message after 3 seconds
         viewModelScope.launch {
             delay(3000)
             _errorMessage.value = ""
@@ -171,6 +210,11 @@ class SOSEmergencyViewModel(application: Application) : AndroidViewModel(applica
 
     fun updateLocation(location: Location) {
         _currentLocation.value = location
+    }
+
+    fun clearMessages() {
+        _errorMessage.value = ""
+        _successMessage.value = ""
     }
 
     override fun onCleared() {

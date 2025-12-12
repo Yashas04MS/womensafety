@@ -9,6 +9,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -33,6 +37,7 @@ fun SOSEmergencyScreen(
     val isTriggering by viewModel.isTriggering.collectAsState()
     val countdown by viewModel.countdown.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
+    val successMessage by viewModel.successMessage.collectAsState()
 
     var showConfirmDialog by remember { mutableStateOf(false) }
     var locationPermissionGranted by remember { mutableStateOf(false) }
@@ -91,10 +96,85 @@ fun SOSEmergencyScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(40.dp))
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Success Message
+        if (successMessage.isNotEmpty()) {
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFFD1FAE5)
+                ),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = null,
+                        tint = Color(0xFF10B981),
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = successMessage,
+                        fontSize = 15.sp,
+                        color = Color(0xFF065F46),
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        // Error Message
+        if (errorMessage.isNotEmpty()) {
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFFFFEBEE)
+                ),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Error,
+                        contentDescription = null,
+                        tint = Color(0xFFFF3B30),
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = errorMessage,
+                            fontSize = 15.sp,
+                            color = Color(0xFFB91C1C),
+                            fontWeight = FontWeight.Medium
+                        )
+
+                        // Show "Add Contacts" button if no contacts error
+                        if (errorMessage.contains("emergency contact", ignoreCase = true)) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            TextButton(
+                                onClick = onNavigateToContacts,
+                                colors = ButtonDefaults.textButtonColors(
+                                    contentColor = Color(0xFFFF3B30)
+                                )
+                            ) {
+                                Text("Add Emergency Contacts →", fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+        }
 
         // Location status indicator
-        if (!locationPermissionGranted) {
+        if (!locationPermissionGranted && errorMessage.isEmpty() && successMessage.isEmpty()) {
             Card(
                 colors = CardDefaults.cardColors(
                     containerColor = Color(0xFFFFF3CD)
@@ -105,7 +185,12 @@ fun SOSEmergencyScreen(
                     modifier = Modifier.padding(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("⚠️", fontSize = 20.sp)
+                    Icon(
+                        imageVector = Icons.Default.Warning,
+                        contentDescription = null,
+                        tint = Color(0xFFF59E0B),
+                        modifier = Modifier.size(20.dp)
+                    )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         "Location permission needed for accurate alerts",
@@ -116,6 +201,8 @@ fun SOSEmergencyScreen(
             }
             Spacer(modifier = Modifier.height(16.dp))
         }
+
+        Spacer(modifier = Modifier.height(20.dp))
 
         // SOS Button with countdown overlay
         Box(
@@ -154,11 +241,18 @@ fun SOSEmergencyScreen(
                     )
 
                     if (isTriggering && countdown > 0) {
+                        Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Triggering in $countdown...",
+                            text = "$countdown",
                             color = Color.White,
-                            fontSize = 16.sp,
+                            fontSize = 32.sp,
                             fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "Sending alert...",
+                            color = Color.White,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium
                         )
                     }
                 }
@@ -181,7 +275,7 @@ fun SOSEmergencyScreen(
                         ),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("CANCEL", color = Color(0xFFFF3B30))
+                        Text("CANCEL", color = Color(0xFFFF3B30), fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -192,37 +286,19 @@ fun SOSEmergencyScreen(
         // Status text
         Text(
             text = when {
-                isTriggering -> "🚨 Alert triggering! Tap CANCEL to stop"
-                alertState == "ACTIVE" -> "✅ Alert sent to emergency contacts"
-                else -> "Tap SOS for instant emergency help"
+                isTriggering -> "🚨 Triggering emergency alert..."
+                successMessage.isNotEmpty() -> ""
+                errorMessage.isNotEmpty() -> ""
+                else -> "Tap SOS button for instant emergency help"
             },
             fontSize = 16.sp,
             textAlign = TextAlign.Center,
             color = when {
                 isTriggering -> Color(0xFFFF3B30)
-                alertState == "ACTIVE" -> Color(0xFF16A34A)
-                else -> Color(0xFF444444)
+                else -> Color(0xFF666666)
             },
             fontWeight = if (isTriggering) FontWeight.Bold else FontWeight.Normal
         )
-
-        // Error message
-        if (errorMessage.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(10.dp))
-            Card(
-                colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFFFFEBEE)
-                ),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = errorMessage,
-                    color = Color(0xFFFF3B30),
-                    fontSize = 14.sp,
-                    modifier = Modifier.padding(12.dp)
-                )
-            }
-        }
 
         Spacer(modifier = Modifier.height(45.dp))
 
@@ -261,6 +337,9 @@ fun SOSEmergencyScreen(
     if (showConfirmDialog) {
         AlertDialog(
             onDismissRequest = { showConfirmDialog = false },
+            icon = {
+                Text("🚨", fontSize = 48.sp)
+            },
             title = {
                 Text(
                     "Trigger SOS Alert?",
@@ -272,27 +351,35 @@ fun SOSEmergencyScreen(
                 Column {
                     Text(
                         "This will immediately notify all your emergency contacts with:",
-                        fontSize = 16.sp
+                        fontSize = 15.sp
                     )
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Text("• Your current location")
-                    Text("• Emergency message")
-                    Text("• Nearby police & hospitals")
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text("📍 Your current location", fontSize = 14.sp)
+                    Text("💬 Emergency message", fontSize = 14.sp)
+                    Text("🏥 Nearby police & hospitals", fontSize = 14.sp)
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     if (!locationPermissionGranted) {
-                        Text(
-                            "⚠️ Location not available - alert will be sent without location",
-                            fontSize = 13.sp,
-                            color = Color(0xFFFF3B30)
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = Color(0xFFFFF3CD)
+                            )
+                        ) {
+                            Text(
+                                "⚠️ Location unavailable - alert will be sent without location",
+                                fontSize = 12.sp,
+                                color = Color(0xFF92400E),
+                                modifier = Modifier.padding(8.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
                     }
 
                     Text(
                         "Alert will be sent in 5 seconds unless you cancel.",
-                        fontSize = 14.sp,
-                        color = Color.Gray
+                        fontSize = 13.sp,
+                        color = Color.Gray,
+                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
                     )
                 }
             },
@@ -306,12 +393,12 @@ fun SOSEmergencyScreen(
                         containerColor = Color(0xFFFF3B30)
                     )
                 ) {
-                    Text("TRIGGER SOS")
+                    Text("TRIGGER SOS", fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showConfirmDialog = false }) {
-                    Text("Cancel")
+                    Text("Cancel", color = Color(0xFF666666))
                 }
             }
         )

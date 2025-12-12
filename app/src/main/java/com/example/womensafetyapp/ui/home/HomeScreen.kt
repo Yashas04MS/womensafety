@@ -36,7 +36,8 @@ import com.google.android.gms.location.LocationServices
 fun HomeScreen(
     onNavigateToSOS: () -> Unit = {},
     onNavigateToContacts: () -> Unit = {},
-    onNavigateToScheduledSharing: () -> Unit = {}
+    onNavigateToScheduledSharing: () -> Unit = {},
+    onNavigateToFakeCall: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -314,7 +315,7 @@ fun HomeScreen(
                         title = "Live Location",
                         description = "Real-time tracking",
                         color = Color(0xFF8B5CF6),
-                        onClick = { /* TODO: Navigate to Live Location */ }
+                        onClick = { onNavigateToScheduledSharing() }
                     )
                 }
 
@@ -328,7 +329,7 @@ fun HomeScreen(
                         title = "Fake Call",
                         description = "Simulate incoming call",
                         color = Color(0xFF6366F1),
-                        onClick = { /* TODO: Navigate to Fake Call */ }
+                        onClick = { onNavigateToFakeCall() }
                     )
                     FeatureCard(
                         modifier = Modifier.weight(1f),
@@ -358,7 +359,7 @@ fun HomeScreen(
                         title = "Scheduled Sharing",
                         description = "Plan location sharing",
                         color = Color(0xFF14B8A6),
-                        onClick = { onNavigateToScheduledSharing() }
+                        onClick = { /* TODO: Navigate to plan sharing */ }
                     )
                 }
 

@@ -3,6 +3,9 @@ package com.example.womensafetyapp.network
 import com.example.womensafetyapp.network.models.*
 import com.example.womensafetyapp.ui.emergency.EmergencyContact
 import com.example.womensafetyapp.ui.emergency.EmergencyContactDTO
+import com.example.womensafetyapp.ui.fakeCall.EndFakeCallDTO
+import com.example.womensafetyapp.ui.fakeCall.FakeCallPresetDTO
+import com.example.womensafetyapp.ui.fakeCall.TriggerFakeCallDTO
 import com.example.womensafetyapp.ui.scheduled.ScheduledLocationSharingRequest
 import com.example.womensafetyapp.ui.scheduled.ScheduledLocationSharingResponse
 import retrofit2.http.*
@@ -141,6 +144,49 @@ interface ApiService {
         @Path("sharingId") sharingId: Long,
         @Header("Authorization") token: String
     ): ScheduledLocationSharingResponse
+
+
+    @GET("api/fake-call/presets")
+    suspend fun getFakeCallPresets(
+        @Header("Authorization") token: String
+    ): List<FakeCallPresetDTO>
+
+    @POST("api/fake-call/presets")
+    suspend fun createFakeCallPreset(
+        @Body preset: FakeCallPresetDTO,
+        @Header("Authorization") token: String
+    ): Map<String, Any>
+
+    @PUT("api/fake-call/presets/{presetId}")
+    suspend fun updateFakeCallPreset(
+        @Path("presetId") presetId: Long,
+        @Body preset: FakeCallPresetDTO,
+        @Header("Authorization") token: String
+    ): Map<String, Any>
+
+    @DELETE("api/fake-call/presets/{presetId}")
+    suspend fun deleteFakeCallPreset(
+        @Path("presetId") presetId: Long,
+        @Header("Authorization") token: String
+    ): Map<String, String>
+
+    @POST("api/fake-call/trigger")
+    suspend fun triggerFakeCall(
+        @Body request: TriggerFakeCallDTO,
+        @Header("Authorization") token: String
+    ): FakeCallResponseDTO
+
+    @POST("api/fake-call/quick-trigger")
+    suspend fun quickTriggerFakeCall(
+        @Query("triggerMethod") triggerMethod: String,
+        @Header("Authorization") token: String
+    ): FakeCallResponseDTO
+
+    @POST("api/fake-call/end")
+    suspend fun endFakeCall(
+        @Body request: EndFakeCallDTO,
+        @Header("Authorization") token: String
+    ): Map<String, Any>
 }
 
 // Emergency Alert DTOs
@@ -162,4 +208,20 @@ data class EmergencyAlertResponse(
     val resolvedAt: String?,
     val contactsNotifiedCount: Int?,
     val message: String?
+)
+
+// Response DTO for fake call trigger
+data class FakeCallResponseDTO(
+    val callLogId: Long?,
+    val presetId: Long?,
+    val callerName: String?,
+    val callerPhone: String?,
+    val callerPhotoUrl: String?,
+    val callType: String?,
+    val autoAnswerDelaySeconds: Int?,
+    val callDurationSeconds: Int?,
+    val ringtoneName: String?,
+    val vibrateEnabled: Boolean?,
+    val message: String?,
+    val instruction: String?
 )
