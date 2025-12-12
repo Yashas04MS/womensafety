@@ -1,6 +1,7 @@
 package com.example.womensafetyapp.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
@@ -29,14 +30,11 @@ sealed class Screen(val route: String) {
     object Home : Screen("home")
     object EmergencyContacts : Screen("emergency_contacts")
     object SOSEmergency : Screen("sos_emergency")
-
     object ScheduledSharing : Screen("scheduled_sharing")
-
     object FakeCallPresets : Screen("fake_call_presets")
-    object IncomingFakeCall : Screen("incoming_fake_call/{callLogId}") {
-        fun createRoute(callLogId: Long) = "incoming_fake_call/$callLogId"
+    object IncomingFakeCall : Screen("incoming_fake_call/{presetId}") {
+        fun createRoute(presetId: Long) = "incoming_fake_call/$presetId"
     }
-
 }
 
 @Composable
@@ -76,18 +74,15 @@ fun AppNavigation(navController: NavHostController) {
                 onNavigateToContacts = {
                     navController.navigate(Screen.EmergencyContacts.route)
                 },
-                onNavigateToScheduledSharing = { // ADD THIS BLOCK
+                onNavigateToScheduledSharing = {
                     navController.navigate(Screen.ScheduledSharing.route)
                 },
-                onNavigateToFakeCall ={
+                onNavigateToFakeCall = {
                     navController.navigate(Screen.FakeCallPresets.route)
-
                 }
-
             )
         }
 
-        // New Emergency Features
         composable(Screen.SOSEmergency.route) {
             SOSEmergencyScreen(
                 onNavigateToContacts = {
@@ -111,30 +106,48 @@ fun AppNavigation(navController: NavHostController) {
         composable(Screen.FakeCallPresets.route) {
             FakeCallPresetsScreen(
                 onBack = { navController.popBackStack() },
-                onTriggerCall = { callLogId ->
-                    navController.navigate(Screen.IncomingFakeCall.createRoute(callLogId))
+                onTriggerCall = { presetId ->
+                    // Navigate with preset ID
+                    navController.navigate(Screen.IncomingFakeCall.createRoute(presetId))
                 }
             )
         }
 
-        composable("incoming_fake_call/{callLogId}") { backStackEntry ->
-            val callLogId = backStackEntry.arguments?.getString("callLogId")?.toLongOrNull() ?: 0L
+        composable("incoming_fake_call/{presetId}") { backStackEntry ->
+            val presetId = backStackEntry.arguments?.getString("presetId")?.toLongOrNull() ?: 0L
             val context = LocalContext.current
             val viewModel: FakeCallViewModel = viewModel(
                 factory = FakeCallViewModelFactory(context)
             )
+
+            // Trigger the fake call when entering this screen
+            LaunchedEffect(presetId) {
+                if (presetId > 0) {
+                    viewModel.triggerFakeCall(presetId)
+                }
+            }
+
             val callResponse by viewModel.callResponse.collectAsState()
 
+            // Show incoming call screen when response is available
             callResponse?.let { response ->
                 IncomingFakeCallScreen(
                     callResponse = response,
-                    onAnswer = { /* Handle answer */ },
+                    onAnswer = {
+                        // Handle answer - call is now active
+                    },
                     onDecline = {
-                        viewModel.endFakeCall(callLogId, false, 0)
+                        // End the call as declined
+                        viewModel.endFakeCall(
+                            callLogId = response.callLogId,
+                            wasAnswered = false,
+                            actualDuration = 0
+                        )
                         navController.popBackStack()
                     },
                     onCallEnded = {
-                        // Calculate actual duration and end call
+                        // Calculate duration and end call
+                        // For now, just navigate back
                         navController.popBackStack()
                     }
                 )

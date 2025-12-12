@@ -225,6 +225,7 @@ fun InfoCard() {
         }
     }
 }
+// In PresetCard component, update the Trigger Call button:
 
 @Composable
 fun PresetCard(
@@ -234,6 +235,7 @@ fun PresetCard(
     onDelete: () -> Unit
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var isTriggering by remember { mutableStateOf(false) }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -277,7 +279,6 @@ fun PresetCard(
                     }
                 }
 
-                // Trigger count badge
                 if (preset.triggerCount > 0) {
                     Surface(
                         shape = RoundedCornerShape(12.dp),
@@ -346,18 +347,30 @@ fun PresetCard(
                 }
 
                 Button(
-                    onClick = onTrigger,
+                    onClick = {
+                        isTriggering = true
+                        onTrigger()
+                    },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFF10B981)
-                    )
+                    ),
+                    enabled = !isTriggering
                 ) {
-                    Icon(
-                        Icons.Default.Phone,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("Trigger Call")
+                    if (isTriggering) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Icon(
+                            Icons.Default.Phone,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Trigger Call")
+                    }
                 }
             }
         }
@@ -399,7 +412,6 @@ fun PresetCard(
         )
     }
 }
-
 @Composable
 fun DetailChip(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String) {
     Surface(
