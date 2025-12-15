@@ -37,18 +37,10 @@ fun HomeScreen(
     onNavigateToSOS: () -> Unit = {},
     onNavigateToContacts: () -> Unit = {},
     onNavigateToScheduledSharing: () -> Unit = {},
-<<<<<<< HEAD
-    onNavigateToFakeCall: () -> Unit = {}
-) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-=======
     onNavigateToFakeCall: () -> Unit = {},
-    onNavigateToSmartAlert:()->Unit={}
+    onNavigateToSmartAlert: () -> Unit = {}
 ) {
     val context = LocalContext.current
-//    val scope = rememberCoroutineScope()
->>>>>>> a9a0289 (Implemented smart alert)
 
     var currentLocation by remember { mutableStateOf<Pair<Double, Double>?>(null) }
     var batteryLevel by remember { mutableStateOf(100) }
@@ -100,11 +92,7 @@ fun HomeScreen(
     ) {
         Column(
             modifier = Modifier
-<<<<<<< HEAD
-                .fillMaxWidth()
-=======
                 .fillMaxSize()
->>>>>>> a9a0289 (Implemented smart alert)
                 .verticalScroll(rememberScrollState())
                 .padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -323,17 +311,11 @@ fun HomeScreen(
                     )
                     FeatureCard(
                         modifier = Modifier.weight(1f),
-<<<<<<< HEAD
-                        icon = Icons.Default.Navigation,
-                        title = "Live Location",
-                        description = "Real-time tracking",
-=======
                         icon = Icons.Default.Schedule,
                         title = "Scheduled Sharing",
                         description = "Plan location sharing",
->>>>>>> a9a0289 (Implemented smart alert)
                         color = Color(0xFF8B5CF6),
-                        onClick = { onNavigateToScheduledSharing() }
+                        onClick = onNavigateToScheduledSharing
                     )
                 }
 
@@ -347,7 +329,7 @@ fun HomeScreen(
                         title = "Fake Call",
                         description = "Simulate incoming call",
                         color = Color(0xFF6366F1),
-                        onClick = { onNavigateToFakeCall() }
+                        onClick = onNavigateToFakeCall
                     )
                     FeatureCard(
                         modifier = Modifier.weight(1f),
@@ -355,12 +337,7 @@ fun HomeScreen(
                         title = "Smart Alerts",
                         description = "AI-powered detection",
                         color = Color(0xFFF59E0B),
-<<<<<<< HEAD
-                        onClick = { /* TODO: Navigate to Smart Alerts */ }
-=======
-                        onClick = { onNavigateToSmartAlert ()}
-
->>>>>>> a9a0289 (Implemented smart alert)
+                        onClick = onNavigateToSmartAlert
                     )
                 }
 
@@ -378,17 +355,11 @@ fun HomeScreen(
                     )
                     FeatureCard(
                         modifier = Modifier.weight(1f),
-<<<<<<< HEAD
-                        icon = Icons.Default.Schedule,
-                        title = "Scheduled Sharing",
-                        description = "Plan location sharing",
-=======
                         icon = Icons.Default.Navigation,
                         title = "Live Location",
                         description = "Real-time tracking",
->>>>>>> a9a0289 (Implemented smart alert)
                         color = Color(0xFF14B8A6),
-                        onClick = { /* TODO: Navigate to plan sharing */ }
+                        onClick = { /* TODO: Navigate to Live Location */ }
                     )
                 }
 
@@ -508,11 +479,6 @@ fun HomeScreen(
     }
 }
 
-<<<<<<< HEAD
-=======
-
-
->>>>>>> a9a0289 (Implemented smart alert)
 @Composable
 fun QuickActionCard(
     modifier: Modifier = Modifier,
@@ -719,11 +685,4 @@ private fun shareLocation(context: Context, location: Pair<Double, Double>) {
         putExtra(Intent.EXTRA_TEXT, "I'm sharing my location with you: $googleMapsUrl")
     }
     context.startActivity(Intent.createChooser(shareIntent, "Share location via"))
-<<<<<<< HEAD
 }
-=======
-}
-
-
-
->>>>>>> a9a0289 (Implemented smart alert)
