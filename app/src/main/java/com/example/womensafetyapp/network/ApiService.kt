@@ -187,7 +187,71 @@ interface ApiService {
         @Body request: EndFakeCallDTO,
         @Header("Authorization") token: String
     ): Map<String, Any>
+
+////////smartalert///////////
+    @GET("api/smart-alert/settings")
+    suspend fun getSmartAlertSettings(
+        @Header("Authorization") token: String
+    ): SmartAlertSettings
+
+    @PUT("api/smart-alert/settings")
+    suspend fun updateSmartAlertSettings(
+        @Body settings: SmartAlertSettingsUpdate,
+        @Header("Authorization") token: String
+    ): Map<String, Any>
+
+    // Activity Logging
+    @POST("api/smart-alert/activity/log")
+    suspend fun logSuspiciousActivity(
+        @Body activity: SuspiciousActivityRequest,
+        @Header("Authorization") token: String
+    ): Map<String, Any>
+
+    @GET("api/smart-alert/activity/log")
+    suspend fun getUserActivityLog(
+        @Query("recentMinutes") recentMinutes: Int?,
+        @Header("Authorization") token: String
+    ): List<SuspiciousActivity>
+
+    // Voice Commands
+    @POST("api/smart-alert/voice/process")
+    suspend fun processVoiceCommand(
+        @Body command: VoiceCommandRequest,
+        @Header("Authorization") token: String
+    ): Map<String, Any>
+
+    // Quick Detection Actions
+    @POST("api/smart-alert/detect/shake")
+    suspend fun reportPhoneShake(
+        @Query("intensity") intensity: Double,
+        @Query("latitude") latitude: Double?,
+        @Query("longitude") longitude: Double?,
+        @Header("Authorization") token: String
+    ): Map<String, Any>
+
+    @POST("api/smart-alert/detect/rapid-movement")
+    suspend fun reportRapidMovement(
+        @Query("speed") speed: Double,
+        @Query("latitude") latitude: Double?,
+        @Query("longitude") longitude: Double?,
+        @Header("Authorization") token: String
+    ): Map<String, Any>
+
+    @POST("api/smart-alert/detect/fall")
+    suspend fun reportFall(
+        @Query("latitude") latitude: Double?,
+        @Query("longitude") longitude: Double?,
+        @Header("Authorization") token: String
+    ): Map<String, Any>
+
+    @POST("api/smart-alert/voice/help")
+    suspend fun voiceHelp(
+        @Query("latitude") latitude: Double?,
+        @Query("longitude") longitude: Double?,
+        @Header("Authorization") token: String
+    ): Map<String, Any>
 }
+
 
 // Emergency Alert DTOs
 data class EmergencyAlertRequest(
@@ -224,4 +288,87 @@ data class FakeCallResponseDTO(
     val vibrateEnabled: Boolean?,
     val message: String?,
     val instruction: String?
+)
+
+// Data models
+data class SmartAlertSettings(
+    val id: Long? = null,
+    val shakeDetectionEnabled: Boolean = true,
+    val shakeSensitivity: Double = 0.7,
+    val shakeDurationSeconds: Int = 3,
+    val runningDetectionEnabled: Boolean = true,
+    val runningDurationSeconds: Int = 10,
+    val fallDetectionEnabled: Boolean = true,
+    val impactDetectionEnabled: Boolean = true,
+    val voiceActivationEnabled: Boolean = true,
+    val voiceKeywords: String = "help,emergency,police,danger",
+    val screamDetectionEnabled: Boolean = false,
+    val autoTriggerEnabled: Boolean = false,
+    val confirmationDelaySeconds: Int = 10,
+    val silentMode: Boolean = false,
+    val autoEnableAtNight: Boolean = false,
+    val nightStartHour: Int = 22,
+    val nightEndHour: Int = 6,
+    val autoEnableInDangerZones: Boolean = true
+)
+
+data class SmartAlertSettingsUpdate(
+    val shakeDetectionEnabled: Boolean? = null,
+    val shakeSensitivity: Double? = null,
+    val shakeDurationSeconds: Int? = null,
+    val runningDetectionEnabled: Boolean? = null,
+    val runningDurationSeconds: Int? = null,
+    val fallDetectionEnabled: Boolean? = null,
+    val impactDetectionEnabled: Boolean? = null,
+    val voiceActivationEnabled: Boolean? = null,
+    val voiceKeywords: String? = null,
+    val screamDetectionEnabled: Boolean? = null,
+    val autoTriggerEnabled: Boolean? = null,
+    val confirmationDelaySeconds: Int? = null,
+    val silentMode: Boolean? = null,
+    val autoEnableAtNight: Boolean? = null,
+    val nightStartHour: Int? = null,
+    val nightEndHour: Int? = null,
+    val autoEnableInDangerZones: Boolean? = null
+)
+
+data class SuspiciousActivity(
+    val id: Long,
+    val activityType: String,
+    val intensityLevel: Double?,
+    val confidenceScore: Double?,
+    val latitude: Double?,
+    val longitude: Double?,
+    val timestamp: String,
+    val alertTriggered: Boolean,
+    val falsePositive: Boolean
+)
+
+data class SuspiciousActivityRequest(
+    val activityType: String,
+    val intensityLevel: Double,
+    val confidenceScore: Double? = null,
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+    val deviceMotionData: String? = null,
+    val notes: String? = null
+)
+
+data class VoiceCommandRequest(
+    val commandText: String,
+    val audioUrl: String? = null,
+    val commandType: String? = null,
+    val confidenceScore: Double? = null,
+    val latitude: Double? = null,
+    val longitude: Double? = null
+)
+
+data class SmartAlertAnalysis(
+    val shouldTriggerAlert: Boolean,
+    val overallRiskScore: Double,
+    val riskLevel: String,
+    val recommendation: String?,
+    val detectedActivities: Map<String, Any>?,
+    val recentActivityCount: Int?,
+    val requiresImmediateAction: Boolean?
 )
