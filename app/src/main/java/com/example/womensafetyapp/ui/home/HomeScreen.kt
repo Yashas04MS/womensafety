@@ -38,7 +38,8 @@ fun HomeScreen(
     onNavigateToContacts: () -> Unit = {},
     onNavigateToScheduledSharing: () -> Unit = {},
     onNavigateToFakeCall: () -> Unit = {},
-    onNavigateToSmartAlert: () -> Unit = {}
+    onNavigateToSmartAlert: () -> Unit = {},
+    onNavigateToVoiceActivation: () -> Unit = {}
 ) {
     val context = LocalContext.current
 
@@ -381,7 +382,7 @@ fun HomeScreen(
                         title = "Voice Activation",
                         description = "Voice emergency trigger",
                         color = Color(0xFFF87171),
-                        onClick = { /* TODO: Navigate to Voice Activation */ }
+                        onClick = onNavigateToVoiceActivation
                     )
                 }
             }
