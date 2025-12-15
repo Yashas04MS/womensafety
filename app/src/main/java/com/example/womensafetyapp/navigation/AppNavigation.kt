@@ -13,16 +13,9 @@ import com.example.womensafetyapp.ui.auth.*
 import com.example.womensafetyapp.ui.home.HomeScreen
 import com.example.womensafetyapp.ui.emergency.EmergencyContactsScreen
 import com.example.womensafetyapp.ui.emergency.SOSEmergencyScreen
-import com.example.womensafetyapp.ui.fakeCall.FakeCallPresetsScreen
-import com.example.womensafetyapp.ui.fakeCall.FakeCallViewModel
-import com.example.womensafetyapp.ui.fakeCall.FakeCallViewModelFactory
+import com.example.womensafetyapp.ui.fakeCall.*
 import com.example.womensafetyapp.ui.scheduled.ScheduledSharingScreen
-import com.example.womensafetyapp.ui.fakeCall.IncomingFakeCallScreen
-<<<<<<< HEAD
-=======
 import com.example.womensafetyapp.ui.smartalert.SmartAlertScreen
-
->>>>>>> a9a0289 (Implemented smart alert)
 
 sealed class Screen(val route: String) {
     object Login : Screen("login")
@@ -40,11 +33,7 @@ sealed class Screen(val route: String) {
     object IncomingFakeCall : Screen("incoming_fake_call/{presetId}") {
         fun createRoute(presetId: Long) = "incoming_fake_call/$presetId"
     }
-<<<<<<< HEAD
-=======
     object SmartAlert : Screen("smart_alert")
-
->>>>>>> a9a0289 (Implemented smart alert)
 }
 
 @Composable
@@ -66,7 +55,7 @@ fun AppNavigation(navController: NavHostController) {
             ForgotPasswordScreen(navController)
         }
 
-        composable("verify_otp/{email}/{token}") { backStackEntry ->
+        composable(Screen.VerifyOTP.route) { backStackEntry ->
             val email = backStackEntry.arguments?.getString("email") ?: ""
             val token = backStackEntry.arguments?.getString("token") ?: ""
             VerifyOtpScreen(navController, email, token)
@@ -89,12 +78,9 @@ fun AppNavigation(navController: NavHostController) {
                 },
                 onNavigateToFakeCall = {
                     navController.navigate(Screen.FakeCallPresets.route)
-<<<<<<< HEAD
-=======
                 },
                 onNavigateToSmartAlert = {
                     navController.navigate(Screen.SmartAlert.route)
->>>>>>> a9a0289 (Implemented smart alert)
                 }
             )
         }
@@ -108,20 +94,14 @@ fun AppNavigation(navController: NavHostController) {
         }
 
         composable(Screen.EmergencyContacts.route) {
-<<<<<<< HEAD
-            EmergencyContactsScreen()
-=======
             EmergencyContactsScreen(
                 onBack = { navController.popBackStack() }
             )
->>>>>>> a9a0289 (Implemented smart alert)
         }
 
         composable(Screen.ScheduledSharing.route) {
             ScheduledSharingScreen(
-                onBack = {
-                    navController.popBackStack()
-                }
+                onBack = { navController.popBackStack() }
             )
         }
 
@@ -129,20 +109,21 @@ fun AppNavigation(navController: NavHostController) {
             FakeCallPresetsScreen(
                 onBack = { navController.popBackStack() },
                 onTriggerCall = { presetId ->
-                    // Navigate with preset ID
                     navController.navigate(Screen.IncomingFakeCall.createRoute(presetId))
                 }
             )
         }
 
-        composable("incoming_fake_call/{presetId}") { backStackEntry ->
-            val presetId = backStackEntry.arguments?.getString("presetId")?.toLongOrNull() ?: 0L
+        composable(Screen.IncomingFakeCall.route) { backStackEntry ->
+            val presetId = backStackEntry.arguments
+                ?.getString("presetId")
+                ?.toLongOrNull() ?: 0L
+
             val context = LocalContext.current
             val viewModel: FakeCallViewModel = viewModel(
                 factory = FakeCallViewModelFactory(context)
             )
 
-            // Trigger the fake call when entering this screen
             LaunchedEffect(presetId) {
                 if (presetId > 0) {
                     viewModel.triggerFakeCall(presetId)
@@ -151,15 +132,11 @@ fun AppNavigation(navController: NavHostController) {
 
             val callResponse by viewModel.callResponse.collectAsState()
 
-            // Show incoming call screen when response is available
             callResponse?.let { response ->
                 IncomingFakeCallScreen(
                     callResponse = response,
-                    onAnswer = {
-                        // Handle answer - call is now active
-                    },
+                    onAnswer = {},
                     onDecline = {
-                        // End the call as declined
                         viewModel.endFakeCall(
                             callLogId = response.callLogId,
                             wasAnswered = false,
@@ -168,24 +145,16 @@ fun AppNavigation(navController: NavHostController) {
                         navController.popBackStack()
                     },
                     onCallEnded = {
-                        // Calculate duration and end call
-                        // For now, just navigate back
                         navController.popBackStack()
                     }
                 )
             }
         }
-<<<<<<< HEAD
-    }
-}
-=======
+
         composable(Screen.SmartAlert.route) {
             SmartAlertScreen(
                 onBack = { navController.popBackStack() }
             )
         }
-
-
     }
-    }
->>>>>>> a9a0289 (Implemented smart alert)
+}
