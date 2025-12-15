@@ -18,6 +18,11 @@ import com.example.womensafetyapp.ui.fakeCall.FakeCallViewModel
 import com.example.womensafetyapp.ui.fakeCall.FakeCallViewModelFactory
 import com.example.womensafetyapp.ui.scheduled.ScheduledSharingScreen
 import com.example.womensafetyapp.ui.fakeCall.IncomingFakeCallScreen
+<<<<<<< HEAD
+=======
+import com.example.womensafetyapp.ui.smartalert.SmartAlertScreen
+
+>>>>>>> a9a0289 (Implemented smart alert)
 
 sealed class Screen(val route: String) {
     object Login : Screen("login")
@@ -35,6 +40,11 @@ sealed class Screen(val route: String) {
     object IncomingFakeCall : Screen("incoming_fake_call/{presetId}") {
         fun createRoute(presetId: Long) = "incoming_fake_call/$presetId"
     }
+<<<<<<< HEAD
+=======
+    object SmartAlert : Screen("smart_alert")
+
+>>>>>>> a9a0289 (Implemented smart alert)
 }
 
 @Composable
@@ -79,6 +89,12 @@ fun AppNavigation(navController: NavHostController) {
                 },
                 onNavigateToFakeCall = {
                     navController.navigate(Screen.FakeCallPresets.route)
+<<<<<<< HEAD
+=======
+                },
+                onNavigateToSmartAlert = {
+                    navController.navigate(Screen.SmartAlert.route)
+>>>>>>> a9a0289 (Implemented smart alert)
                 }
             )
         }
@@ -92,7 +108,13 @@ fun AppNavigation(navController: NavHostController) {
         }
 
         composable(Screen.EmergencyContacts.route) {
+<<<<<<< HEAD
             EmergencyContactsScreen()
+=======
+            EmergencyContactsScreen(
+                onBack = { navController.popBackStack() }
+            )
+>>>>>>> a9a0289 (Implemented smart alert)
         }
 
         composable(Screen.ScheduledSharing.route) {
@@ -153,5 +175,17 @@ fun AppNavigation(navController: NavHostController) {
                 )
             }
         }
+<<<<<<< HEAD
     }
 }
+=======
+        composable(Screen.SmartAlert.route) {
+            SmartAlertScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+
+    }
+    }
+>>>>>>> a9a0289 (Implemented smart alert)

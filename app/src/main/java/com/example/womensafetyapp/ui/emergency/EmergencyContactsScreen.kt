@@ -192,12 +192,21 @@ class EmergencyContactsViewModel(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+<<<<<<< HEAD
 fun EmergencyContactsScreen() {
+=======
+fun EmergencyContactsScreen(
+    onBack: () -> Unit = {}
+) {
+>>>>>>> a9a0289 (Implemented smart alert)
     val context = LocalContext.current
     val viewModel: EmergencyContactsViewModel = remember {
         EmergencyContactsViewModel(context)
     }
+<<<<<<< HEAD
 
+=======
+>>>>>>> a9a0289 (Implemented smart alert)
     val contacts by viewModel.contacts.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
@@ -227,8 +236,22 @@ fun EmergencyContactsScreen() {
                         )
                     }
                 },
+<<<<<<< HEAD
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color(0xFFFF3B30),
+=======
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Color.White
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFF3B82F6),
+>>>>>>> a9a0289 (Implemented smart alert)
                     titleContentColor = Color.White
                 )
             )

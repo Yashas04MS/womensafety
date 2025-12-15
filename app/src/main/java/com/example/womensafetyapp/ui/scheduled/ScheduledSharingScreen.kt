@@ -59,7 +59,11 @@ fun ScheduledSharingScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
+<<<<<<< HEAD
                     containerColor = Color(0xFF2563EB),
+=======
+                    containerColor = Color(0xFF8B5CF6),
+>>>>>>> a9a0289 (Implemented smart alert)
                     titleContentColor = Color.White,
                     navigationIconContentColor = Color.White
                 )
