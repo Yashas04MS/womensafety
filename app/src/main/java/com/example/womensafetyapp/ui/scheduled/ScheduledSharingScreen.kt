@@ -1,6 +1,5 @@
 package com.example.womensafetyapp.ui.scheduled
 
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -55,15 +54,11 @@ fun ScheduledSharingScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, "Back")
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-<<<<<<< HEAD
-                    containerColor = Color(0xFF2563EB),
-=======
                     containerColor = Color(0xFF8B5CF6),
->>>>>>> a9a0289 (Implemented smart alert)
                     titleContentColor = Color.White,
                     navigationIconContentColor = Color.White
                 )
@@ -72,13 +67,9 @@ fun ScheduledSharingScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showCreateDialog = true },
-                containerColor = Color(0xFF2563EB)
+                containerColor = Color(0xFF8B5CF6)
             ) {
-                Icon(
-                    Icons.Default.Add,
-                    contentDescription = "Create Session",
-                    tint = Color.White
-                )
+                Icon(Icons.Default.Add, contentDescription = "Create", tint = Color.White)
             }
         }
     ) { paddingValues ->
@@ -90,9 +81,7 @@ fun ScheduledSharingScreen(
         ) {
             when {
                 isLoading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+                    CircularProgressIndicator(Modifier.align(Alignment.Center))
                 }
 
                 errorMessage.isNotEmpty() -> {
@@ -115,28 +104,18 @@ fun ScheduledSharingScreen(
                         contentPadding = PaddingValues(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        item {
-                            InfoCard()
-                        }
+                        item { InfoCard() }
 
                         items(sessions) { session ->
                             SessionCard(
                                 session = session,
-                                onMarkArrived = {
-                                    viewModel.markArrived(session.id)
-                                },
-                                onCancel = {
-                                    viewModel.cancelSession(session.id)
-                                },
-                                onClick = {
-                                    selectedSession = session
-                                }
+                                onMarkArrived = { viewModel.markArrived(session.id) },
+                                onCancel = { viewModel.cancelSession(session.id) },
+                                onClick = { selectedSession = session }
                             )
                         }
 
-                        item {
-                            Spacer(modifier = Modifier.height(80.dp))
-                        }
+                        item { Spacer(modifier = Modifier.height(80.dp)) }
                     }
                 }
             }
@@ -146,16 +125,16 @@ fun ScheduledSharingScreen(
     if (showCreateDialog) {
         CreateSessionDialog(
             onDismiss = { showCreateDialog = false },
-            onCreate = { session ->
-                viewModel.createSession(session)
+            onCreate = {
+                viewModel.createSession(it)
                 showCreateDialog = false
             }
         )
     }
 
-    if (selectedSession != null) {
+    selectedSession?.let {
         SessionDetailsDialog(
-            session = selectedSession!!,
+            session = it,
             onDismiss = { selectedSession = null }
         )
     }
@@ -165,25 +144,18 @@ fun ScheduledSharingScreen(
 fun InfoCard() {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFDEEBFF)
-        )
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFEEE9FF))
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                Icons.Default.Info,
-                contentDescription = null,
-                tint = Color(0xFF2563EB),
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.width(12.dp))
+            Icon(Icons.Default.Info, null, tint = Color(0xFF6D28D9))
+            Spacer(Modifier.width(12.dp))
             Text(
-                "Schedule location sharing for dates, rides, or walks. Your contacts will be notified automatically.",
+                "Schedule location sharing for trips or walks. Contacts are notified automatically.",
                 fontSize = 14.sp,
-                color = Color(0xFF1E40AF)
+                color = Color(0xFF4C1D95)
             )
         }
     }
@@ -201,112 +173,46 @@ fun SessionCard(
             .fillMaxWidth()
             .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        )
+        elevation = CardDefaults.cardElevation(2.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            // Header
+        Column(Modifier.padding(16.dp)) {
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = session.sessionName,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            Icons.Default.Schedule,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp),
-                            tint = Color.Gray
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = formatDateTime(session.startTime),
-                            fontSize = 13.sp,
-                            color = Color.Gray
-                        )
-                    }
+                Column(Modifier.weight(1f)) {
+                    Text(session.sessionName, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(4.dp))
+                    Text(formatDateTime(session.startTime), fontSize = 13.sp, color = Color.Gray)
                 }
-
-                StatusChip(status = session.status)
+                StatusChip(session.status)
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(Modifier.height(8.dp))
+            Text("Duration: ${session.durationMinutes} min", fontSize = 14.sp)
 
-            // Duration
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    Icons.Default.Timer,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp),
-                    tint = Color(0xFF666666)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    "Duration: ${session.durationMinutes} minutes",
-                    fontSize = 14.sp,
-                    color = Color(0xFF444444)
-                )
+            session.destinationAddress?.let {
+                Spacer(Modifier.height(8.dp))
+                Text(it, fontSize = 14.sp, color = Color.DarkGray, maxLines = 1)
             }
 
-            if (session.destinationAddress != null) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Default.LocationOn,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                        tint = Color(0xFF666666)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        session.destinationAddress,
-                        fontSize = 14.sp,
-                        color = Color(0xFF444444),
-                        maxLines = 1
-                    )
-                }
-            }
-
-            // Action buttons for ACTIVE status
             if (session.status == "ACTIVE") {
-                Spacer(modifier = Modifier.height(12.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
+                Spacer(Modifier.height(12.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedButton(
                         onClick = onCancel,
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.outlinedButtonColors(
                             contentColor = Color(0xFFEF4444)
                         )
-                    ) {
-                        Text("Cancel")
-                    }
+                    ) { Text("Cancel") }
+
                     Button(
                         onClick = onMarkArrived,
                         modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF10B981)
-                        )
-                    ) {
-                        Icon(
-                            Icons.Default.Check,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("I Arrived")
-                    }
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981))
+                    ) { Text("I Arrived") }
                 }
             }
         }
@@ -315,20 +221,17 @@ fun SessionCard(
 
 @Composable
 fun StatusChip(status: String) {
-    val (color, text) = when (status) {
-        "SCHEDULED" -> Color(0xFFFEF3C7) to "Scheduled"
-        "ACTIVE" -> Color(0xFFD1FAE5) to "Active"
-        "COMPLETED" -> Color(0xFFDDEAFF) to "Completed"
-        "CANCELLED" -> Color(0xFFFEE2E2) to "Cancelled"
-        else -> Color(0xFFF3F4F6) to status
+    val color = when (status) {
+        "SCHEDULED" -> Color(0xFFFEF3C7)
+        "ACTIVE" -> Color(0xFFD1FAE5)
+        "COMPLETED" -> Color(0xFFDDEAFF)
+        "CANCELLED" -> Color(0xFFFEE2E2)
+        else -> Color.LightGray
     }
 
-    Surface(
-        shape = RoundedCornerShape(12.dp),
-        color = color
-    ) {
+    Surface(shape = RoundedCornerShape(12.dp), color = color) {
         Text(
-            text = text,
+            text = status,
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
             fontSize = 12.sp,
             fontWeight = FontWeight.Medium
@@ -337,96 +240,39 @@ fun StatusChip(status: String) {
 }
 
 @Composable
-fun EmptyState(
-    onCreateClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier.padding(40.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            "📅",
-            fontSize = 64.sp
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            "No Scheduled Sessions",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            "Schedule location sharing for upcoming trips, dates, or walks",
-            fontSize = 14.sp,
-            color = Color.Gray,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-        Button(
-            onClick = onCreateClick,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF2563EB)
-            )
-        ) {
-            Icon(Icons.Default.Add, contentDescription = null)
-            Spacer(modifier = Modifier.width(8.dp))
+fun EmptyState(onCreateClick: () -> Unit, modifier: Modifier = Modifier) {
+    Column(modifier.padding(40.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Text("📅", fontSize = 64.sp)
+        Spacer(Modifier.height(12.dp))
+        Text("No Scheduled Sessions", fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(8.dp))
+        Button(onClick = onCreateClick) {
+            Icon(Icons.Default.Add, null)
+            Spacer(Modifier.width(8.dp))
             Text("Create Session")
         }
     }
 }
 
 @Composable
-fun ErrorState(
-    message: String,
-    onRetry: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier.padding(40.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Icon(
-            Icons.Default.Error,
-            contentDescription = null,
-            tint = Color(0xFFEF4444),
-            modifier = Modifier.size(64.dp)
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            "Error Loading Sessions",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            message,
-            fontSize = 14.sp,
-            color = Color.Gray,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-        Button(
-            onClick = onRetry,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF2563EB)
-            )
-        ) {
-            Text("Retry")
-        }
+fun ErrorState(message: String, onRetry: () -> Unit, modifier: Modifier = Modifier) {
+    Column(modifier.padding(40.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Icon(Icons.Default.Error, null, tint = Color.Red, modifier = Modifier.size(48.dp))
+        Spacer(Modifier.height(12.dp))
+        Text(message, color = Color.Gray)
+        Spacer(Modifier.height(12.dp))
+        Button(onClick = onRetry) { Text("Retry") }
     }
 }
 
-fun formatDateTime(dateTime: String): String {
-    return try {
-        val parsed = LocalDateTime.parse(dateTime)
-        parsed.format(DateTimeFormatter.ofPattern("MMM dd, hh:mm a"))
+fun formatDateTime(dateTime: String): String =
+    try {
+        LocalDateTime.parse(dateTime)
+            .format(DateTimeFormatter.ofPattern("MMM dd, hh:mm a"))
     } catch (e: Exception) {
         dateTime
     }
-}
 
-// Data class for sessions
 data class ScheduledSession(
     val id: Long,
     val sessionName: String,
