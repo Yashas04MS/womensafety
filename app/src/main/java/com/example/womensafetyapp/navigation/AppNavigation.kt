@@ -152,8 +152,7 @@ fun AppNavigation(navController: NavHostController) {
         }
 
         composable(Screen.SmartAlert.route) {
-            SmartAlertScreen(
-                onBack = { navController.popBackStack() }
+            SmartAlertScreen( onBack = { navController.popBackStack() }
             )
         }
     }
