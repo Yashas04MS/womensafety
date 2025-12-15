@@ -16,6 +16,9 @@ import com.example.womensafetyapp.ui.emergency.SOSEmergencyScreen
 import com.example.womensafetyapp.ui.fakeCall.*
 import com.example.womensafetyapp.ui.scheduled.ScheduledSharingScreen
 import com.example.womensafetyapp.ui.smartalert.SmartAlertScreen
+import com.example.womensafetyapp.ui.VoiceActivation.EmergencyAlertManager
+import com.example.womensafetyapp.ui.VoiceActivation.VoiceRecognitionManager
+import com.example.womensafetyapp.ui.voiceactivation.VoiceActivationScreen
 
 sealed class Screen(val route: String) {
     object Login : Screen("login")
@@ -34,10 +37,13 @@ sealed class Screen(val route: String) {
         fun createRoute(presetId: Long) = "incoming_fake_call/$presetId"
     }
     object SmartAlert : Screen("smart_alert")
+    object VoiceActivation : Screen("voice_activation")
 }
 
 @Composable
 fun AppNavigation(navController: NavHostController) {
+    val context = LocalContext.current
+
     NavHost(
         navController = navController,
         startDestination = Screen.Login.route
@@ -81,6 +87,9 @@ fun AppNavigation(navController: NavHostController) {
                 },
                 onNavigateToSmartAlert = {
                     navController.navigate(Screen.SmartAlert.route)
+                },
+                onNavigateToVoiceActivation = {
+                    navController.navigate(Screen.VoiceActivation.route)
                 }
             )
         }
@@ -119,7 +128,6 @@ fun AppNavigation(navController: NavHostController) {
                 ?.getString("presetId")
                 ?.toLongOrNull() ?: 0L
 
-            val context = LocalContext.current
             val viewModel: FakeCallViewModel = viewModel(
                 factory = FakeCallViewModelFactory(context)
             )
@@ -152,7 +160,37 @@ fun AppNavigation(navController: NavHostController) {
         }
 
         composable(Screen.SmartAlert.route) {
-            SmartAlertScreen( onBack = { navController.popBackStack() }
+            SmartAlertScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // Voice Activation Screen
+        composable(Screen.VoiceActivation.route) {
+            var voiceRecognitionManager: VoiceRecognitionManager? = null
+            val emergencyAlertManager = EmergencyAlertManager(context)
+
+            VoiceActivationScreen(
+                onStartListening = { contacts, onKeywordDetected, onError, onStatusChange ->
+                    voiceRecognitionManager = VoiceRecognitionManager(
+                        context = context,
+                        onKeywordDetected = { keyword ->
+                            emergencyAlertManager.triggerEmergencyAlert(
+                                keyword = keyword,
+                                contacts = contacts,
+                                onComplete = { log ->
+                                    onKeywordDetected(keyword, log)
+                                }
+                            )
+                        },
+                        onError = onError,
+                        onStatusChange = onStatusChange
+                    )
+                    voiceRecognitionManager?.startListening()
+                },
+                onStopListening = {
+                    voiceRecognitionManager?.stopListening()
+                }
             )
         }
     }
